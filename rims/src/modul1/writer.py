@@ -1,0 +1,2 @@
+def fce():
+    print("cooool")
