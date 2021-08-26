@@ -38,3 +38,7 @@ python was 3.8? (or maybe 3.7)
 
 
 env12 has python 3.7 and gpu from that github answer
+
+added kivy from conda install kivy -c conda-forge
+
+freeze env conda env export > environment-tfg7.yml
