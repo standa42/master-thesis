@@ -1,10 +1,10 @@
 import setuptools
 
-with open("../README.md", "r") as fh:
+with open("./README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='rims',
+    name='master-thesis-implementation',
     version='0.1a',
     author="Roman Staněk",
     author_email="rnsk@seznam.cz",

@@ -15,7 +15,6 @@ cd "master-thesis-implementation"
 
 2. Install environment
 ```
-cd rims
 
 # create conda environment (current name is tfg7, contains tensorflow-gpu)
 conda env create -f environment-tfg7.yml
