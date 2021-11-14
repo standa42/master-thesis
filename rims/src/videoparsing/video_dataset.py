@@ -15,7 +15,7 @@ from src.helpers.helper_functions import *
 class video_dataset:
     def __init__(self):
         self.dataset_folder_path = "./rims/data/video/"
-        self.video_frames_path = "./rims/data/frames2/"
+        self.video_frames_path = "./rims/data/frames/"
 
     def standalone_cmd_interface(self):
         """ Cmd dialog used to select days to process """
@@ -30,8 +30,9 @@ class video_dataset:
             print(str(counter) + " - " + day_folder)
             counter = counter + 1
         print("Your choice: ")
-
+            
         # Choice of user via text input
+        selected_list = []
         while True:
             selected_list = input()
             selected_list = selected_list.strip()
@@ -42,7 +43,7 @@ class video_dataset:
             else: 
                 try:
                     selected_list = selected_list.split(",")
-                    selected_list = map(lambda x: int(x.strip()), selected_list)
+                    selected_list = list(map(lambda x: int(x.strip()), selected_list))
                     break
                 except:
                     print("Invalid input, please try again:")

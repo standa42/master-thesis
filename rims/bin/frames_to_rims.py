@@ -11,6 +11,9 @@ from kivy.graphics.texture import Texture
 from kivy.config import Config
 Config.set('graphics', 'resizable', False)
 
+import torch
+import pandas as pd
+
 # slider - on_touch_up, on_value
 
 
@@ -160,6 +163,40 @@ class FramesToRims(App):
                             self.frames_b.append(frame)
         self.frame_index = 0
 
+        import os
+        self.ds_frames = []
+
+        fold = 'C:/Users/rnsk/Desktop/master-thesis-implementation/rims/data/yolo_dataset/first_part'
+        for frame_file in os.listdir(fold): 
+            self.ds_frames.append (os.path.join(fold, f"{frame_file}"))
+
+
+        from PIL import Image
+        self.model = torch.hub.load('ultralytics/yolov5', 'custom', path='C:/Users/rnsk/Desktop/roboflow/yolov5/runs/train/exp5/weights/best.pt')
+
+        pneu_counter = 0
+        car_counter = 0
+
+        for f in self.ds_frames:
+            f_img = self.load_img(f) # f.path
+
+            results = self.model(f_img, size=640)
+         
+            for index, row in results.pandas().xyxy[0].iterrows(): # img predictions
+                crop_img = f_img[int(row['ymin']):int(row['ymax']), int(row['xmin']):int(row['xmax'])]
+                crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
+                if row['name'] == 'pneu':
+                    # crop_img = Image.fromarray(crop_img)
+                    # crop_img.save('C:/Users/rnsk/Desktop/master-thesis-implementation/rims/data/yolo_object_cutout/pneu_from_1000_dataset//' + f'pneu_{str(pneu_counter).zfill(9)}.png')
+                    # pneu_counter = pneu_counter + 1
+                    pass
+                elif row['name'] == 'car':
+                    crop_img = Image.fromarray(crop_img)
+                    crop_img.save('C:/Users/rnsk/Desktop/master-thesis-implementation/rims/data/test_del_me/' + f'car_{str(car_counter).zfill(9)}.png')
+                    car_counter = car_counter + 1
+                    pass
+        quit()
+
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
         self._keyboard = None
@@ -248,7 +285,19 @@ class FramesToRims(App):
 
         RGB_img = resized
 
+        results = self.model(img, size=640)
+         
+        for index, row in results.pandas().xyxy[0].iterrows(): # img predictions
+            clr = (255,0,0)
+            if row['name'] == 'pneu':
+                clr = (0,255,0)
+            cv2.rectangle(img, (int(row['xmin']), int(row['ymin'])), (int(row['xmax']), int(row['ymax'])), clr, 10)
+
+        return img
+
         return RGB_img
+
+        
 
         # if circles is not None:
         #     counter = 0
