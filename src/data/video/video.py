@@ -19,7 +19,7 @@ class Video:
 
     def is_parsed(self):
         """Checks whether video is parsed to the frames folder on the disc"""
-        camera_folder_path = self.get_frames_path_camera_folder()
+        camera_folder_path = self._get_frames_path_camera_folder()
         # check that folder for that video exists
         if(Path(camera_folder_path).exists()):
             # if it contains 600 files, which it should as it is 600 frames per video - consider it parsed ok
@@ -34,10 +34,10 @@ class Video:
             return
 
         # ensure all necessary folders on the way exist
-        safe_mkdir(self.get_frames_path_folder())
-        safe_mkdir(self.get_frames_path_day_folder())
-        safe_mkdir(self.get_frames_path_time_folder())
-        camera_folder = self.get_frames_path_camera_folder()
+        safe_mkdir(self._get_frames_path_folder())
+        safe_mkdir(self._get_frames_path_day_folder())
+        safe_mkdir(self._get_frames_path_time_folder())
+        camera_folder = self._get_frames_path_camera_folder()
         safe_mkdir_clean(camera_folder)
         
         # parse and save frames
@@ -54,7 +54,7 @@ class Video:
     def generate_paths_to_frames(self):
         """Generates paths to all frames in the video, sorted by time ascending"""
         # takes video folder where
-        return [self.get_frames_path_camera_folder() + f"frame{'{:03d}'.format(count)}.jpg" for count in range(600)]
+        return [self._get_frames_path_camera_folder() + f"frame{'{:03d}'.format(count)}.jpg" for count in range(600)]
 
     def generate_frames_from_video(self):
         """Returns a generator of frames directly from the video"""
@@ -76,16 +76,17 @@ class Video:
         frames = []
         for frame_path in frames_paths:
             frames.append(cv2.imread(frame_path))
+        return frames
 
     # just helpers with paths
-    def get_frames_path_folder(self):
+    def _get_frames_path_folder(self):
         return Config.DataPaths.FramesFolder
 
-    def get_frames_path_day_folder(self):
+    def _get_frames_path_day_folder(self):
         return Config.DataPaths.FramesFolder + self.date + '/'
 
-    def get_frames_path_time_folder(self):
+    def _get_frames_path_time_folder(self):
         return Config.DataPaths.FramesFolder + self.date + '/' + self.time + '/'
 
-    def get_frames_path_camera_folder(self):
+    def _get_frames_path_camera_folder(self):
         return Config.DataPaths.FramesFolder + self.date + '/' + self.time + '/' + self.camera + '/'
