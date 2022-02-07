@@ -16,15 +16,17 @@ class YoloModel():
         if model == 'tracking':
             path = Config.DataPaths.TrackingYoloModel
             self.inference_size = 640 
+        elif model == 'wheel_bolts_detection':
+            path = Config.DataPaths.WheelBoltsDetectionYoloModel
+            self.inference_size = 768
 
         self.model = torch.hub.load('ultralytics/yolov5', 'custom', path=path)
 
-    def get_frame_with_bounding_boxes(self, frame):
+    def get_frame_with_bounding_boxes(self, frame, thickness=5, color=(255,0,0)):
         """Paints infered bounding boxes into frame"""
         bounding_boxes = self.get_bounding_boxes(frame)
-        color = (255,0,0)
         for bounding_box in bounding_boxes:
-            cv2.rectangle(frame, bounding_box.xmin, bounding_box.ymin, bounding_box.xmax, bounding_box.ymax, color, 10)
+            cv2.rectangle(frame, (bounding_box.xmin, bounding_box.ymin), (bounding_box.xmax, bounding_box.ymax), color, thickness)
         return frame
 
     def get_bounding_boxes(self, frame):

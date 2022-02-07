@@ -1,0 +1,531 @@
+#:import FadeTransition kivy.uix.screenmanager.FadeTransition
+
+ScreenManager:
+    id: screen_manager
+    transition: FadeTransition()
+    
+    MenuScreen:
+        id: menu_screen
+        name: 'MenuScreen'
+        manager: 'screen_manager'
+
+    HoughParametersScreen:
+        id: hough_parameters_screen
+        name: 'HoughParametersScreen'
+        manager: 'screen_manager'
+
+    DetectionVisualisationScreen:
+        id: detection_visualisation_screen
+        name: 'DetectionVisualisationScreen'
+        manager: 'screen_manager'
+
+    HoughParametersSegmentationScreen:
+        id: hough_parameters_segmentation_screen
+        name: 'HoughParametersSegmentationScreen'
+        manager: 'screen_manager'
+
+<MenuScreen>:
+    FloatLayout:
+        Label:
+            text: 'Tracking app'
+            font_size: 50
+            size_hint: 0.3,0.15
+            pos_hint: {"center_x":0.5, "center_y":0.7}
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: 0.25,0.2
+            pos_hint: {'center_x':0.5, 'center_y':0.5}
+        
+            Button:
+                text: 'Detection visualisation'
+                font_size: 25
+                on_release: app.root.current = 'DetectionVisualisationScreen'
+
+            Button:
+                text: 'Hough parameters tuning'
+                font_size: 25
+                on_release: app.root.current = 'HoughParametersScreen'
+
+            Button:
+                text: 'Hough parameters tuning on screws'
+                font_size: 25
+                on_release: app.root.current = 'HoughParametersSegmentationScreen'
+
+<DetectionVisualisationScreen>
+    BoxLayout:
+        orientation: 'horizontal'
+
+        BoxLayout:
+            size_hint: (1, 1)
+            orientation: 'vertical'
+
+            BoxLayout:
+                size_hint: (1, 1)
+                orientation: 'horizontal'
+                Image:
+                    id: upper_frame_image
+                    size_hint: (0.5, 1)
+                    allow_stretch: True
+                BoxLayout:
+                    id: upper_box
+                    size_hint: (0.5, 1)
+                    orientation: 'vertical'
+                    
+            BoxLayout:
+                size_hint: (1, 1)
+                orientation: 'horizontal'
+                Image:
+                    id: lower_frame_image
+                    size_hint: (0.5, 1)
+                    allow_stretch: True
+                BoxLayout:
+                    id: lower_box
+                    size_hint: (0.5, 1)
+                    orientation: 'vertical'
+
+        BoxLayout:
+            size_hint: (None, 1)
+            width: 200
+            orientation: 'vertical'
+
+            Label:
+                font_size: 25
+                text: 'Detection viz'
+
+            Label:
+                id: video_description_label
+                text: 'Video: '
+            BoxLayout:
+                orientation: 'horizontal'
+                Button:
+                    id: video_previous_button
+                    text: '<'
+                    on_press: root.previous_video()
+                Button:
+                    id: video_next_button
+                    text: '>'
+                    on_press: root.next_video()
+
+            Label:
+                id: frame_description_label
+                text: 'Frame: '
+            BoxLayout:
+                orientation: 'horizontal'
+                Button:
+                    id: frame_previous_button
+                    text: '<'
+                    on_press: root.previous_frame()
+                Button:
+                    id: frame_next_button
+                    text: '>'
+                    on_press: root.next_frame()
+            BoxLayout:
+                orientation: 'horizontal'
+                Button:
+                    id: frame_animation_previous_button
+                    text: '<<'
+                    on_press: root.animate_frames_backward()
+                Button:
+                    id: frame_animation_pause_button
+                    text: '||'    
+                    on_press: root.animate_frames_pause()
+                Button:
+                    id: frame_animation_next_button
+                    text: '>>'
+                    on_press: root.animate_frames_forward()
+            
+            # Button:
+            #     id: toggle_gold_button
+            #     text: 'Disable Gold labels'
+            #     on_press: root.toggle_gold()
+
+            Button:
+                id: toggle_yolo_button
+                text: 'Disable YOLO'
+                on_press: root.toggle_yolo()
+
+            Button:
+                id: toggle_hough_button
+                text: 'Disable Hough'
+                on_press: root.toggle_hough()
+
+            Button:
+                text: 'Back to Menu'
+                on_release: app.root.current = 'MenuScreen'
+
+<HoughParametersScreen>:
+    BoxLayout:
+        orientation: 'horizontal'
+
+        BoxLayout:
+            size_hint: (1, 1)
+            orientation: 'vertical'
+            Image:
+                id: frame_image
+                size_hint: (1, 1)
+                allow_stretch: True
+
+        BoxLayout:
+            size_hint: (None, 1)
+            width: 200
+            orientation: 'vertical'
+
+            Label:
+                font_size: 25
+                text: 'Hough tuning'
+
+            # Label:
+            #     id: video_description_label
+            #     text: 'Video: '
+            # BoxLayout:
+            #     orientation: 'horizontal'
+            #     Button:
+            #         id: video_previous_button
+            #         text: '<'
+            #     Button:
+            #         id: video_next_button
+            #         text: '>'
+
+            Label:
+                id: frame_description_label
+                text: 'Frame: '
+            BoxLayout:
+                orientation: 'horizontal'
+                Button:
+                    id: frame_previous_button
+                    text: '<'
+                    on_press: root.previous_frame()
+                Button:
+                    id: frame_next_button
+                    text: '>'
+                    on_press: root.next_frame()
+            BoxLayout:
+                orientation: 'horizontal'
+                Button:
+                    id: frame_animation_previous_button
+                    text: '<<'
+                    on_press: root.animate_frames_backward()
+                Button:
+                    id: frame_animation_pause_button
+                    text: '||'    
+                    on_press: root.animate_frames_pause()
+                Button:
+                    id: frame_animation_next_button
+                    text: '>>'
+                    on_press: root.animate_frames_forward()
+
+            Label:
+                text: 'Pipeline:'
+
+            Button:
+                text: 'Downscaled view'
+                on_press: root.change_image_mode("downscaled")
+            Label:
+                id: downscale_slider_label
+                text: 'Downscale: '
+            Slider:
+                id: downscale_slider_slider
+                min: 1
+                max: 100
+                value: 40
+                step: 1
+                on_value: root.downscale()
+
+            Button:
+                text: 'Gray view'
+                on_press: root.change_image_mode("gray")
+
+            Button:
+                text: 'Blur view'
+                on_press: root.change_image_mode("blur")
+            Label:
+                id: blur_slider_label
+                text: 'Blur: '
+            Slider:
+                id: blur_slider_slider
+                min: 1
+                max: 10
+                value: 2
+                step: 1
+                on_value: root.blur()
+
+            # Button:
+            #     text: 'Canny view'
+            #     on_press: root.change_image_mode("canny")
+            # Label:
+            #     id: canny_slider_1_label
+            #     text: 'Canny 1 param:'
+            # Slider:
+            #     id: canny_slider_1_slider
+            #     min: 1
+            #     max: 1000
+            #     value: 150
+            #     step: 1
+            #     on_value: root.canny()
+            # Label:
+            #     id: canny_slider_2_label
+            #     text: 'Canny 2 param:'
+            # Slider:
+            #     id: canny_slider_2_slider
+            #     min: 1
+            #     max: 1000
+            #     value: 250
+            #     step: 1
+            #     on_value: root.canny()
+
+            Button:
+                text: 'Hough view'
+                on_press: root.change_image_mode("hough")
+            Label:
+                id: hough_dp_label
+                text: 'Dp: '
+            Slider:
+                id: hough_dp_slider
+                min: 1
+                max: 20
+                value: 1
+                step: 1
+                on_value: root.hough()
+            Label:
+                id: hough_mindist_label
+                text: 'MinDist: '
+            Slider:
+                id: hough_mindist_slider
+                min: 1
+                max: 150
+                value: 120
+                step: 1
+                on_value: root.hough()
+            Label:
+                id: hough_param1_label
+                text: 'Param1: '
+            Slider:
+                id: hough_param1_slider
+                min: 1
+                max: 400
+                value: 205
+                step: 1
+                on_value: root.hough()
+            Label:
+                id: hough_param2_label
+                text: 'Param2: '
+            Slider:
+                id: hough_param2_slider
+                min: 1
+                max: 100
+                value: 50
+                step: 1
+                on_value: root.hough()
+            Label:
+                id: hough_minradius_label
+                text: 'MinRadius: '
+            Slider:
+                id: hough_minradius_slider
+                min: 1
+                max: 300
+                value: 70
+                step: 1
+                on_value: root.hough()
+            Label:
+                id: hough_maxradius_label
+                text: 'MaxRadius: '
+            Slider:
+                id: hough_maxradius_slider
+                min: 1
+                max: 500
+                value: 130
+                step: 1
+                on_value: root.hough()
+            
+            Button:
+                text: 'Back to Menu'
+                on_release: app.root.current = 'MenuScreen'
+
+<HoughParametersSegmentationScreen>:
+    BoxLayout:
+        orientation: 'horizontal'
+
+        BoxLayout:
+            size_hint: (1, 1)
+            orientation: 'vertical'
+            Image:
+                id: frame_image
+                size_hint: (1, 1)
+                allow_stretch: True
+
+        BoxLayout:
+            size_hint: (None, 1)
+            width: 200
+            orientation: 'vertical'
+
+            Label:
+                font_size: 25
+                text: 'Hough tuning'
+
+            # Label:
+            #     id: video_description_label
+            #     text: 'Video: '
+            # BoxLayout:
+            #     orientation: 'horizontal'
+            #     Button:
+            #         id: video_previous_button
+            #         text: '<'
+            #     Button:
+            #         id: video_next_button
+            #         text: '>'
+
+            Label:
+                id: frame_description_label
+                text: 'Frame: '
+            BoxLayout:
+                orientation: 'horizontal'
+                Button:
+                    id: frame_previous_button
+                    text: '<'
+                    on_press: root.previous_frame()
+                Button:
+                    id: frame_next_button
+                    text: '>'
+                    on_press: root.next_frame()
+            BoxLayout:
+                orientation: 'horizontal'
+                Button:
+                    id: frame_animation_previous_button
+                    text: '<<'
+                    on_press: root.animate_frames_backward()
+                Button:
+                    id: frame_animation_pause_button
+                    text: '||'    
+                    on_press: root.animate_frames_pause()
+                Button:
+                    id: frame_animation_next_button
+                    text: '>>'
+                    on_press: root.animate_frames_forward()
+
+            Label:
+                text: 'Pipeline:'
+
+            Button:
+                text: 'Downscaled view'
+                on_press: root.change_image_mode("downscaled")
+            Label:
+                id: downscale_slider_label
+                text: 'Downscale: '
+            Slider:
+                id: downscale_slider_slider
+                min: 1
+                max: 100
+                value: 40
+                step: 1
+                on_value: root.downscale()
+
+            Button:
+                text: 'Gray view'
+                on_press: root.change_image_mode("gray")
+
+            Button:
+                text: 'Blur view'
+                on_press: root.change_image_mode("blur")
+            Label:
+                id: blur_slider_label
+                text: 'Blur: '
+            Slider:
+                id: blur_slider_slider
+                min: 1
+                max: 10
+                value: 2
+                step: 1
+                on_value: root.blur()
+
+            # Button:
+            #     text: 'Canny view'
+            #     on_press: root.change_image_mode("canny")
+            # Label:
+            #     id: canny_slider_1_label
+            #     text: 'Canny 1 param:'
+            # Slider:
+            #     id: canny_slider_1_slider
+            #     min: 1
+            #     max: 1000
+            #     value: 150
+            #     step: 1
+            #     on_value: root.canny()
+            # Label:
+            #     id: canny_slider_2_label
+            #     text: 'Canny 2 param:'
+            # Slider:
+            #     id: canny_slider_2_slider
+            #     min: 1
+            #     max: 1000
+            #     value: 250
+            #     step: 1
+            #     on_value: root.canny()
+
+            Button:
+                text: 'Hough view'
+                on_press: root.change_image_mode("hough")
+            Label:
+                id: hough_dp_label
+                text: 'Dp: '
+            Slider:
+                id: hough_dp_slider
+                min: 1
+                max: 20
+                value: 1
+                step: 1
+                on_value: root.hough()
+            Label:
+                id: hough_mindist_label
+                text: 'MinDist: '
+            Slider:
+                id: hough_mindist_slider
+                min: 1
+                max: 100
+                value: 120
+                step: 1
+                on_value: root.hough()
+            Label:
+                id: hough_param1_label
+                text: 'Param1: '
+            Slider:
+                id: hough_param1_slider
+                min: 1
+                max: 300
+                value: 205
+                step: 1
+                on_value: root.hough()
+            Label:
+                id: hough_param2_label
+                text: 'Param2: '
+            Slider:
+                id: hough_param2_slider
+                min: 1
+                max: 100
+                value: 50
+                step: 1
+                on_value: root.hough()
+            Label:
+                id: hough_minradius_label
+                text: 'MinRadius: '
+            Slider:
+                id: hough_minradius_slider
+                min: 1
+                max: 100
+                value: 70
+                step: 1
+                on_value: root.hough()
+            Label:
+                id: hough_maxradius_label
+                text: 'MaxRadius: '
+            Slider:
+                id: hough_maxradius_slider
+                min: 1
+                max: 100
+                value: 130
+                step: 1
+                on_value: root.hough()
+            
+            Button:
+                text: 'Back to Menu'
+                on_release: app.root.current = 'MenuScreen'

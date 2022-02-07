@@ -16,8 +16,12 @@ class Video_pair:
 
     def generate_frame_pairs_from_video(self):
         """Returns a generator of pairs of frames directly from the video"""
-        return zip(self.video_a.generate_frames_from_video(), self.video_b.generate_frames_from_video())
+        return list(zip(self.video_a.generate_frames_from_video(), self.video_b.generate_frames_from_video()))
 
     def generate_frame_pairs_from_folder(self):
         """Returns a generator of pairs of frames directly from the video"""
-        return zip(self.video_a.generate_frames_from_folder(), self.video_b.generate_frames_from_folder())
+        return list(zip(self.video_a.generate_frames_from_folder(), self.video_b.generate_frames_from_folder()))
+        
+    def generate_paths_to_frames(self):
+        """Returns a generator of pairs of frames directly from the video"""
+        return list(zip(self.video_a.generate_paths_to_frames(), self.video_b.generate_paths_to_frames()))
