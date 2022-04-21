@@ -1,5 +1,6 @@
 class Config:
     class DataPaths:
+        DataFolder = "./data/"
         ZippedRawDataFolder = "./data/raw/"
         VideoFolder = "./data/video/"
         FramesFolder = "./data/frames/"
@@ -16,7 +17,7 @@ class Config:
         WheelBoltsDetectionYoloModel = "./model/whee_bolts_detection_yolo.pt"
 
         CropsFolder = "./data/crops/"
-        ScaledDownCropsFolder = "./data/scaled_down_crops/"
+        ScaledDownCropsFolder = "./data/downscaled_crops/"
         CropsFolder500Random = "./data/crops_500_random/"
         CropsFolder100Random = "./data/crops_100_random/"
 
@@ -26,11 +27,18 @@ class Config:
         UniqueRimsAugmentation = "./data/unique_rims_augmentation/"
         WheelClassificationFolder = "./data/wheel_classification/"
         UniqueRimsCollageDataset = "./data/unique_rims_collage_dataset/"
+        UniqueRimsCollageDatasetClipped = "./data/unique_rims_collage_dataset_clipped/"
+        UniqueRimsCollageDatasetClippedGeometryOnly = "./data/unique_rims_collage_dataset_clipped_geometry_only/"
         WheelClassificationAugmentation = "./data/wheel_classification_augmentation/"
+        AugmentationOfClasses = "./data/augmentation_examples/"
 
         TrackingDatasetRandom = "./data/tracking_dataset/final/tracking_train/obj_train_data/"
+        TrackingDatasetRandomValidation = "./data/tracking_dataset/final/tracking_validation/obj_train_data/"
+        TrackingDatasetRandomTest = "./data/tracking_dataset/final/tracking_test/obj_train_data/"
 
         ScrewsSegmentationDatasetFolder = "./data/crops/"
+
+        ImageGridsGeneratedFolder = "./data/image_grids_generated/"
     
     class Tracking:
         HoughTuningDownscaleValue = 40

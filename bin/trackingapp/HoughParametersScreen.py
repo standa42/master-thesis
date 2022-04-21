@@ -26,6 +26,8 @@ class HoughParametersScreen(Screen):
         self.frame_index_update = 0
         self.image_mode = "hough"
         self.clock_update_interval = 1.
+        self.gold_active = True
+        self.gold_bboxes = []
 
         # loading algorithms parameters from config
         self.downscale_value = Config.Tracking.HoughTuningDownscaleValue
@@ -66,8 +68,10 @@ class HoughParametersScreen(Screen):
 
     # Updates
     def reload_frame(self):
-        frame_index, frame = self.dataset.get_current()
+        frame_index, frame, gold_bboxes = self.dataset.get_current()
+        self.gold_bboxes = gold_bboxes
         modified_frame = self.modify_image_accoring_to_image_mode(frame)
+        modified_frame = self.impaint_gold_bboxes(modified_frame)
         texture = self.img_to_texture(modified_frame)
         self.ids.frame_image.texture = texture
 
@@ -91,6 +95,16 @@ class HoughParametersScreen(Screen):
         self.ids.hough_minradius_label.text = "MinRadius: " + str(self.hough_minradius_value)
         self.ids.hough_maxradius_label.text = "MaxRadius: " + str(self.hough_maxradius_value)
         
+    def impaint_gold_bboxes(self, image):
+        if(self.gold_active and self.image_mode == "hough"):
+            height, width, channels = image.shape
+            for bbox in self.gold_bboxes:
+                color = (0,0,255) if bbox["class"] == 0 else (255,0,0)
+                left_upper = (int((bbox["x_center"] - (bbox["width"]/2)) * width), int((bbox["y_center"] - (bbox["height"]/2)) * height))
+                right_bottom = (int((bbox["x_center"] + (bbox["width"]/2)) * width), int((bbox["y_center"] + (bbox["height"]/2)) * height))
+                cv2.rectangle(image, left_upper, right_bottom, color, 2)
+        return image
+
     def modify_image_accoring_to_image_mode(self, original_frame):
         # downscaling
         downscale_to_percent_of_original = self.downscale_value # percent of original size
@@ -161,6 +175,10 @@ class HoughParametersScreen(Screen):
         self.image_mode = mode
         self.reload_frame()
 
+    def toggle_gold_hough(self):
+        self.gold_active = not self.gold_active
+        self.reload_frame()
+
     # sliders control
     def downscale(self):
         self.downscale_value = self.ids.downscale_slider_slider.value 
@@ -186,14 +204,14 @@ class HoughParametersScreen(Screen):
 
     # frame movement control
     def next_frame(self):
-        frame_index, frame = self.dataset.get_next()
+        frame_index, frame, gold_bboxes = self.dataset.get_next()
         if frame_index == None:
             return
         self.frame_index = frame_index
         self.reload_frame()
 
     def previous_frame(self):
-        frame_index, frame = self.dataset.get_previous()
+        frame_index, frame, gold_bboxes = self.dataset.get_previous()
         if frame_index == None:
             return
         self.frame_index = frame_index

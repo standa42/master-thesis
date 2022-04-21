@@ -1,13 +1,12 @@
-import os
-import zipfile
-from pathlib import Path
-
-from config.Config import Config
 from src.helpers.helper_functions import *
 
-from src.data.video.video import Video
-from src.data.video.video_pair import Video_pair
 from src.data.video.video_dataset import Video_dataset
+
+# Description
+#
+# Extract frames from videos in Video folder and puts them into Frames folder
+# Allows user to select, how many videos will be extracted in during execution
+# Provides estimate of time needed for extraction
 
 dataset = Video_dataset()
 

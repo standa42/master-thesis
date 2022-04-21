@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     # Declare an augmentation pipeline
     transform = A.Compose([
-        A.RandomCrop(width=256, height=256),
+        # A.RandomCrop(width=256, height=256),
         A.HorizontalFlip(p=0.5),
         A.RandomBrightnessContrast(p=0.1),
         # A.Blur(blur_limit=3, always_apply=False, p=0.1),

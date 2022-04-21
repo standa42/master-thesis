@@ -6,6 +6,7 @@ import PIL
 from PIL import Image
 import requests
 import json
+import time
 
 import kivy
 from kivy.clock import Clock
@@ -20,6 +21,57 @@ from src.data.video.video_dataset import Video_dataset
 from src.model.yolo_model import YoloModel
 from src.model.tracking_heuristic import TrackingHeuristic
 from src.model.tracking_prediction import TrackingPrediction
+
+from skimage.measure import EllipseModel
+
+import numpy as np
+from numpy.linalg import eig, inv
+def fitEllipse(x,y):
+    x = x[:,np.newaxis]
+    y = y[:,np.newaxis]
+    D =  np.hstack((x*x, x*y, y*y, x, y, np.ones_like(x)))
+    S = np.dot(D.T,D)
+    C = np.zeros([6,6])
+    C[0,2] = C[2,0] = 2; C[1,1] = -1
+    E, V =  eig(np.dot(inv(S), C))
+    n = np.argmax(np.abs(E))
+    a = V[:,n]
+    return a
+
+def ellipse_center(a):
+    b,c,d,f,g,a = a[1]/2, a[2], a[3]/2, a[4]/2, a[5], a[0]
+    num = b*b-a*c
+    x0=(c*d-b*f)/num
+    y0=(a*f-b*d)/num
+    return np.array([x0,y0])
+
+
+def ellipse_angle_of_rotation( a ):
+    b,c,d,f,g,a = a[1]/2, a[2], a[3]/2, a[4]/2, a[5], a[0]
+    return 0.5*np.arctan(2*b/(a-c))
+
+
+def ellipse_axis_length( a ):
+    b,c,d,f,g,a = a[1]/2, a[2], a[3]/2, a[4]/2, a[5], a[0]
+    up = 2*(a*f*f+c*d*d+g*b*b-2*b*d*f-a*c*g)
+    down1=(b*b-a*c)*( (c-a)*np.sqrt(1+4*b*b/((a-c)*(a-c)))-(c+a))
+    down2=(b*b-a*c)*( (a-c)*np.sqrt(1+4*b*b/((a-c)*(a-c)))-(c+a))
+    res1=np.sqrt(up/down1)
+    res2=np.sqrt(up/down2)
+    return np.array([res1, res2])
+
+def ellipse_angle_of_rotation2( a ):
+    b,c,d,f,g,a = a[1]/2, a[2], a[3]/2, a[4]/2, a[5], a[0]
+    if b == 0:
+        if a > c:
+            return 0
+        else:
+            return np.pi/2
+    else: 
+        if a > c:
+            return np.arctan(2*b/(a-c))/2
+        else:
+            return np.pi/2 + np.arctan(2*b/(a-c))/2
 
 class DetectionVisualisationScreen(Screen):
 
@@ -173,9 +225,59 @@ class DetectionVisualisationScreen(Screen):
             origo = cv2.cvtColor(origo, cv2.COLOR_RGB2BGR)
             # cropped_image = self.hough_on_screws(cropped_image)
 
+            print("wheel bolts yolo detection")
             wheel_bolts_bounding_boxes = self.yolo_model_bolts.get_bounding_boxes(cropped_image)
             for bounding_box2 in wheel_bolts_bounding_boxes:
                 cv2.rectangle(cropped_image, (bounding_box2.xmin, bounding_box2.ymin), (bounding_box2.xmax, bounding_box2.ymax), color, thickness)
+
+            # elipse inprint
+            centers_wheel_bboxes = []
+            for bounding_box2 in wheel_bolts_bounding_boxes:
+                bbox_center = bounding_box2.get_center()
+                centers_wheel_bboxes.append( (float(bbox_center[0]), float(bbox_center[1]))      )
+            
+            if len(centers_wheel_bboxes) == 5:
+
+                a_points =np.array([np.array(xi) for xi in centers_wheel_bboxes]) #np.array(centers_wheel_bboxes)
+                x = a_points[:, 0]
+                y = a_points[:, 1]
+
+                ell = EllipseModel()
+                done = ell.estimate(a_points)
+
+                if done:
+                    xc, yc, a, b, theta = ell.params
+
+                    center_coordinates = (int(xc), int(yc))
+                    axesLength = (int(a), int(b))
+                    angle = int(theta*180/np.pi)
+                    startAngle = 0
+                    endAngle = 360
+                    color = (0, 255, 0)
+                    thickness = 2
+                    cropped_image = cv2.ellipse(cropped_image, center_coordinates, axesLength, angle,
+                                            startAngle, endAngle, color, thickness)
+
+
+                # a = fitEllipse(x,y)
+                # center = ellipse_center(a)
+                # #phi = ellipse_angle_of_rotation(a)
+                # phi = ellipse_angle_of_rotation2(a)
+                # axes = ellipse_axis_length(a)
+
+                # center_coordinates = (int(center[0]),int(center[1]))
+                # axesLength = (int(axes[0]), int(axes[1]))
+                # angle = 30
+                # startAngle = 0
+                # endAngle = 360
+                # color = (0, 255, 0)
+                # thickness = 2
+                # cropped_image = cv2.ellipse(cropped_image, center_coordinates, axesLength, angle,
+                #                         startAngle, endAngle, color, thickness)
+
+                
+
+            # elipse inprint end Ellipse((xc, yc), 2*a, 2*b, theta*180/np.pi, edgecolor='red', facecolor='none')
 
             cropped_image = cv2.cvtColor(cropped_image, cv2.COLOR_RGB2BGR)
 

@@ -44,10 +44,7 @@ if __name__ == "__main__":
     
     features = []
     for c in crops:
-        hog_features = hog(c, orientations=8, 
-                pixels_per_cell=(8, 8),
-                cells_per_block=(1, 1), 
-                multichannel=True)
+        hog_features = hog(c, multichannel=True)
         hog_features = [f*100.0 for f in hog_features]
         features.append(hog_features)
         

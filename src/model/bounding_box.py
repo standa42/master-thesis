@@ -21,6 +21,9 @@ class BoundingBox:
         cropped_image = Image.fromarray(cropped_image)
         return cropped_image
 
+    def get_center(self):
+        return (int((self.xmin + self.xmax)/2), int((self.ymin + self.ymax)/2))
+
     def make_centered_wheel_bounding_box(self):
         """Changes bounding box, so that center is in the original one and size is 770x770 fitted into original image of size 1920x1080"""
         center_x = int(mean([self.xmin, self.xmax]))

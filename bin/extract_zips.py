@@ -18,7 +18,7 @@ video_folder = Config.DataPaths.VideoFolder
 safe_mkdir(raw_folder)
 safe_mkdir(video_folder)
 
-print("This script expects zips for the individual days to be stored in format like:")
+print("This script expects zips with the videos for the individual days to be stored in format like:")
 print("./data/raw/2019_05_13/2019_05_13.zip")
 print("")
 
@@ -41,7 +41,7 @@ for day_folder in day_folders:
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                 zip_ref.extractall(video_folder)
         except:
-            print("There seems to be issue with file " + zip_path + ", please unzip it manualy to video folder with day name")
+            print("There seems to be issue with file " + zip_path + ", please unzip it manually to video folder with day name")
     else:
         print("There is no zip file named " + day_folder + ".zip" + " in folder for day: " + day_folder)
 
@@ -53,41 +53,3 @@ if not day_folders:
 print("Script completed")
 print("Press any key to end the program..")
 input()
-
-
-
-
-
-
-# TODO: old code, should be deleted
-# # get raw folder
-# raw_folder = Config.DataPaths.ZippedRawDataFolder
-# # ensure it exists
-# if not Path(raw_folder).exists():
-#     print("No folder " + raw_folder + ", means there are no data.")
-#     print("Please insert data as in following example: " + raw_folder + "2019_05_13/2019_05_13.zip")
-# else:
-#     # get all subfolders
-#     day_folders = os.listdir(raw_folder)
-#     day_folders.remove("placeholder.txt") # TODO make smarter
-#     # for each zip file
-#     for day_folder in day_folders:
-#         print("Unzipping file: " + day_folder + ".zip")
-#         zip_path = raw_folder + day_folder + '/' + day_folder + ".zip"
-#         # does it exist?
-#         if Path(zip_path).exists():
-#             # if so, unzip it to correct location in videos
-#             try:
-#                 with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-#                     videos_path = Config.DataPaths.VideoFolder
-#                     extract_to_path = videos_path 
-#                     safe_mkdir(videos_path)
-#                     safe_mkdir(extract_to_path)
-#                     zip_ref.extractall(extract_to_path)
-#             except:
-#                 print("There seems to be issue with file " + zip_path + ", please unzip it manualy to video folder with day name")
-#         else:
-#             print("There is no zip file named " + day_folder + ".zip" + " in folder for day: " + day_folder)
-
-# print("Press any key to end the program..")
-# input()

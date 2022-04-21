@@ -6,6 +6,7 @@ from src.helpers.helper_functions import *
 
 from src.model.bounding_box import BoundingBox
 
+import time
 
 class YoloModel():
     """Supports loading of yolo models and basic operations on them"""

@@ -37,14 +37,14 @@ class ClassificationModel:
         #                 metrics=['accuracy'])
 
         # model.load_weights("./model/rims_classification_checkpoints/checkpoint2")
-        model = keras.models.load_model("./model/rims_classification_checkpoints2/checkpoint2")
+        model = keras.models.load_model("./model/rims_classification_checkpoints\EfficientNetB0_weights-imagenet_unfreezed-25-layers")
 
         self.model = model
     
     def inference(self, image):
         # image = list(image)
         # image = np.array(image)
-        image = image / 255.0
+        # image = image / 255.0
         image = np.reshape(image, (1,256,256,3))
 
         print(f"Number of classes is: {self.num_classes}")

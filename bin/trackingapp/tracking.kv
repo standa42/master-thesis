@@ -339,6 +339,11 @@ ScreenManager:
                 on_value: root.hough()
             
             Button:
+                id: toggle_gold_button_hough
+                text: 'Toggle gold wheel bb'
+                on_press: root.toggle_gold_hough()
+
+            Button:
                 text: 'Back to Menu'
                 on_release: app.root.current = 'MenuScreen'
 
