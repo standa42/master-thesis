@@ -32,9 +32,23 @@ class Config:
         WheelClassificationAugmentation = "./data/wheel_classification_augmentation/"
         AugmentationOfClasses = "./data/augmentation_examples/"
 
+        Dataset31NotSelected = "./data/dataset31_not_selected/"
+        Dataset31 = "./data/dataset31/"
+
+        WheelAndBoltsDatasetSamples = "./data/wheel_and_bolts_dataset_samples/"
+
+        SizeEstimationDatasetTrain = "./data/size_estimation_dataset/size_estimation_dataset_train/obj_train_data/"
+        SizeEstimationDatasetTest = "./data/size_estimation_dataset/size_estimation_dataset_test/obj_train_data/"
+        SizeEstimationDatasetVal = "./data/size_estimation_dataset/size_estimation_dataset_val/obj_train_data/"
+
+
         TrackingDatasetRandom = "./data/tracking_dataset/final/tracking_train/obj_train_data/"
         TrackingDatasetRandomValidation = "./data/tracking_dataset/final/tracking_validation/obj_train_data/"
         TrackingDatasetRandomTest = "./data/tracking_dataset/final/tracking_test/obj_train_data/"
+
+        TrackingDatasetV2RandomTrain = "./data/tracking_dataset_v2/tracking_dataset_train/obj_train_data/" 
+        TrackingDatasetV2RandomValidation = "./data/tracking_dataset_v2/tracking_dataset_val/obj_train_data/"
+        TrackingDatasetV2RandomTest = "./data/tracking_dataset_v2/tracking_dataset_test/obj_train_data/"
 
         ScrewsSegmentationDatasetFolder = "./data/crops/"
 

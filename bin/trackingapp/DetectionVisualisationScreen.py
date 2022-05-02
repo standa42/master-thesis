@@ -7,6 +7,7 @@ from PIL import Image
 import requests
 import json
 import time
+import copy
 
 import kivy
 from kivy.clock import Clock
@@ -20,6 +21,7 @@ from config.Config import Config
 from src.data.video.video_dataset import Video_dataset
 from src.model.yolo_model import YoloModel
 from src.model.tracking_heuristic import TrackingHeuristic
+from src.model.tracking_heuristic_v2 import TrackingHeuristicV2
 from src.model.tracking_prediction import TrackingPrediction
 
 from skimage.measure import EllipseModel
@@ -104,7 +106,7 @@ class DetectionVisualisationScreen(Screen):
         self.yolo_model = YoloModel('tracking')
         self.yolo_model_bolts = YoloModel('wheel_bolts_detection')
 
-        self.tracking_heuristic = TrackingHeuristic()
+        self.tracking_heuristic = TrackingHeuristicV2()
 
         self.reload_frame()
 
@@ -132,9 +134,11 @@ class DetectionVisualisationScreen(Screen):
             self.lower_detection_boxes = []
             frame_b = self.yolo(frame_b, "b", original_frame_b)
             
-        # inpaint tracking data
-        frame_a = self.inpaint_tracking(frame_a, "a")
-        frame_b = self.inpaint_tracking(frame_b, "b")
+        # TODO: inpaint tracking data
+        # frame_a = self.inpaint_tracking(self.frame_index, frame_a, "a")
+        # frame_b = self.inpaint_tracking(self.frame_index, frame_b, "b")
+        frame_a, frame_b = self.tracking_heuristic.impaint_predictions(self.frame_index, frame_a, frame_b)
+
         # update frames in scene
         self.ids.upper_frame_image.texture = self.img_to_texture(frame_a)
         self.ids.lower_frame_image.texture = self.img_to_texture(frame_b)
@@ -212,8 +216,11 @@ class DetectionVisualisationScreen(Screen):
         bounding_boxes = self.yolo_model.get_bounding_boxes(frame)
         for bounding_box in bounding_boxes:
             cv2.rectangle(frame, (bounding_box.xmin, bounding_box.ymin), (bounding_box.xmax, bounding_box.ymax), color, thickness)
-        # add data to tracking heuristic
-        self.tracking_heuristic.add_frame(self.frame_index, bounding_boxes, camera)
+        # TODO: add data to tracking heuristic 
+        # self.tracking_heuristic.add_frame(self.frame_index, bounding_boxes, camera)
+        self.tracking_heuristic.add_tracking_data(self.frame_index, bounding_boxes, camera)
+        bounding_boxes = copy.deepcopy(bounding_boxes)
+
 
         # display cropped pneus
         for bbox in [b for b in bounding_boxes if b.classification == "pneu"]:
@@ -225,7 +232,6 @@ class DetectionVisualisationScreen(Screen):
             origo = cv2.cvtColor(origo, cv2.COLOR_RGB2BGR)
             # cropped_image = self.hough_on_screws(cropped_image)
 
-            print("wheel bolts yolo detection")
             wheel_bolts_bounding_boxes = self.yolo_model_bolts.get_bounding_boxes(cropped_image)
             for bounding_box2 in wheel_bolts_bounding_boxes:
                 cv2.rectangle(cropped_image, (bounding_box2.xmin, bounding_box2.ymin), (bounding_box2.xmax, bounding_box2.ymax), color, thickness)

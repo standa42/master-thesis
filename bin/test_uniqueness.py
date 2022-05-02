@@ -11,7 +11,7 @@ def load_images_from_folder(folder):
     onlyfiles = [f for f in listdir(folder) if isfile(join(folder, f))]
     onlyfiles = list(filter(lambda x: ".jpg" in x, onlyfiles))
     onlyfiles = list(map(lambda x: Image.open(join(folder,x)), onlyfiles))
-    return onlyfiles
+    return onlyfiles 
 
 def test_similarity_two_images(image1, image2):
     diff = ImageChops.difference(image1, image2)

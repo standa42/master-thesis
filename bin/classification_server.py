@@ -37,7 +37,7 @@ class ClassificationModel:
         #                 metrics=['accuracy'])
 
         # model.load_weights("./model/rims_classification_checkpoints/checkpoint2")
-        model = keras.models.load_model("./model/rims_classification_checkpoints\EfficientNetB0_weights-imagenet_unfreezed-25-layers")
+        model = keras.models.load_model("./model/rims_classification_checkpoints\EfficientNetB0_weights-imagenet_unfreezed-25-layers_dataset31")
 
         self.model = model
     

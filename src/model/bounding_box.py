@@ -24,6 +24,32 @@ class BoundingBox:
     def get_center(self):
         return (int((self.xmin + self.xmax)/2), int((self.ymin + self.ymax)/2))
 
+    def get_area(self):
+        return (self.xmax - self.xmin) * (self.ymax - self.ymin)
+
+    def get_intersection_area(self, another_bbox):
+        overlap_area_xmin = max(self.xmin, another_bbox.xmin)
+        overlap_area_ymin = max(self.ymin, another_bbox.ymin)
+        overlap_area_xmax = min(self.xmax, another_bbox.xmax)
+        overlap_area_ymax = min(self.ymax, another_bbox.ymax)
+
+        # tests for non-overlapping dimensions
+        if overlap_area_xmax <= overlap_area_xmin:
+            return 0.0
+        if overlap_area_ymax <= overlap_area_ymin:
+            return 0.0
+
+        x_size = overlap_area_xmax - overlap_area_xmin
+        y_size = overlap_area_ymax - overlap_area_ymin
+
+        return float(x_size * y_size) 
+    
+    def get_union_area(self, another_bbox):
+        return self.get_area() + another_bbox.get_area() - self.get_intersection_area(another_bbox)
+
+    def get_iou(self, another_bbox):
+        return self.get_intersection_area(another_bbox) / self.get_union_area(another_bbox)
+
     def make_centered_wheel_bounding_box(self):
         """Changes bounding box, so that center is in the original one and size is 770x770 fitted into original image of size 1920x1080"""
         center_x = int(mean([self.xmin, self.xmax]))

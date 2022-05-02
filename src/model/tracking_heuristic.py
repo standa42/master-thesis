@@ -1,10 +1,79 @@
 import cv2
+from torch import _foreach_abs
 from config.Config import Config
 from operator import attrgetter
+from src.model.bounding_box import BoundingBox
 
 from src.model.tracking_prediction import TrackingPrediction
 
 class TrackingHeuristic():
+
+    # VERSION WITH OPENCV TRACKER - for every new bbox add new tracker
+    # def __init__(self):
+    #     self.reset()
+
+    # def reset(self):
+    #     self.tracker = cv2.MultiTracker_create()
+    #     self.frame_index = 0
+    #     self.tracked_bboxes = []
+    #     self.predicted_bboxes = []
+
+    # def add_frame(self, frame_index, bounding_boxes, camera):
+    #     if camera == "a":
+    #         self.predicted_bboxes.append(bounding_boxes)
+
+    # def get_prediction(self, frame_index, frame, camera):
+    #     if camera == "b":
+    #         return []
+    #     # update tracking bboxes by tracking from on current image
+    #     if self.frame_index > 0:
+    #         ok, boxes = self.tracker.update(frame)
+
+    #         new_boxes = []
+    #         for box in boxes:
+    #             newbox = BoundingBox("idk", int(newbox[0]), int(newbox[0] + newbox[2]), int(newbox[1]), int(newbox[1] + newbox[3]))
+    #             new_boxes.append(boxes)
+            
+    #         self.tracked_bboxes.append(new_boxes)
+    #     else:
+    #         self.tracked_bboxes.append([])
+
+    #     # compare tracked bboxes with detected ones and add new - if new added, add em also to tracking boxes
+    #     for detected_box in self.predicted_bboxes[self.frame_index]:
+    #         overlap = False 
+    #         for tracked_box in self.tracked_bboxes[self.frame_index]:
+    #             overlap = True
+    #         if not overlap:
+    #             self.tracker.add(self.createTrackerByName("CSRT"), frame, ( detected_box.xmin, detected_box.xmax - detected_box.xmin, detected_box.ymin, detected_box.ymax - detected_box.ymin ))
+
+    #     # return tracked bboxes
+    #     self.frame_index = self.frame_index + 1
+    #     return self.tracked_bboxes[self.frame_index-1]
+            
+    # def createTrackerByName(trackerType):
+    #     # Create a tracker based on tracker name
+    #     if trackerType == 'BOOSTING':
+    #         tracker = cv2.TrackerBoosting_create()
+    #     elif trackerType == 'MIL':
+    #         tracker = cv2.TrackerMIL_create()
+    #     elif trackerType == 'KCF':
+    #         tracker = cv2.TrackerKCF_create()
+    #     elif trackerType == 'TLD':
+    #         tracker = cv2.TrackerTLD_create()
+    #     elif trackerType == 'MEDIANFLOW':
+    #         tracker = cv2.TrackerMedianFlow_create()
+    #     elif trackerType == 'GOTURN':
+    #         tracker = cv2.TrackerGOTURN_create()
+    #     elif trackerType == 'MOSSE':
+    #         tracker = cv2.TrackerMOSSE_create()
+    #     elif trackerType == 'CSRT':
+    #         tracker = cv2.TrackerCSRT_create()
+    #     else:
+    #         pass
+
+    #     return tracker
+
+    # OLD APPROACH 
     # TODO: implement non-maximum suppresion like thing on x intervals
 
     def __init__(self):
