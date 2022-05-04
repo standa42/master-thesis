@@ -6,15 +6,18 @@ from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.uix.screenmanager import Screen
 from kivy.graphics.texture import Texture
+from src.model.yolo_model import YoloModel
 
-from src.data.screws_segmentation_dataset.screws_segmentation_dataset import ScrewsSegmentationDataset
+from src.data.screws_segmentation_dataset.screws_segmentation_dataset import BoltsEstimationDataset
 from config.Config import Config
 
-class HoughParametersSegmentationScreen(Screen):
+from skimage.measure import EllipseModel
+
+class SizeEstimationTestingScreen(Screen):
     
     # Initializations
     def __init__(self, **kwargs):
-        super(HoughParametersSegmentationScreen, self).__init__(**kwargs)
+        super(SizeEstimationTestingScreen, self).__init__(**kwargs)
 
     def on_pre_enter(self):
         # Keyboard on_down callback
@@ -43,7 +46,9 @@ class HoughParametersSegmentationScreen(Screen):
         # self.init_sliders()
 
         # load dataset
-        self.dataset = ScrewsSegmentationDataset()
+        self.dataset = BoltsEstimationDataset()
+
+        self.yolo_model_bolts = YoloModel('size_estimation_256')
 
         # loads frames and updates labels information
         self.reload_frame()
@@ -92,59 +97,166 @@ class HoughParametersSegmentationScreen(Screen):
         self.ids.hough_maxradius_label.text = "MaxRadius: " + str(self.hough_maxradius_value)
         
     def modify_image_accoring_to_image_mode(self, original_frame):
-        # downscaling
-        downscale_to_percent_of_original = self.downscale_value # percent of original size
-        
-        downscaled_width = int(original_frame.shape[1] * downscale_to_percent_of_original / 100)
-        downscaled_height = int(original_frame.shape[0] * downscale_to_percent_of_original / 100)
-        
-        resized_frame = cv2.resize(original_frame, (downscaled_width, downscaled_height), interpolation = cv2.INTER_CUBIC)
-        
-        if(self.image_mode == "downscaled"):
-            return resized_frame
+        working_image = original_frame.copy()
 
-        # converting to gray-scale
-        gray_frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
-        if(self.image_mode == "gray"):
-            return gray_frame
+        # get bounding boxes bolts + rim
+        all_bounding_boxes = self.yolo_model_bolts.get_bounding_boxes(working_image)
+        rim_bbox = list(filter(lambda x: x.classification == 'Rim', all_bounding_boxes))
+        bolts_bboxs = list(filter(lambda x: x.classification == 'Bolt', all_bounding_boxes))
 
-        # histogram normalization
-        gray_frame = cv2.equalizeHist(gray_frame)
+        # impaint bolts bboxes
+        for bounding_box2 in bolts_bboxs:
+            cv2.rectangle(working_image, (bounding_box2.xmin, bounding_box2.ymin), (bounding_box2.xmax, bounding_box2.ymax), (0,0,255), 2)
 
-        # blurring the image (to reduce noise)
+        # imprint pcd ellipse
+        centers_wheel_bboxes = []
+        for bounding_box3 in bolts_bboxs:
+            bbox_center = bounding_box3.get_center()
+            centers_wheel_bboxes.append( (float(bbox_center[0]), float(bbox_center[1]))      )
+        bolts_axes = (None, None)
+        if len(centers_wheel_bboxes) == 5:
+            rim_ellipse_points =np.array([np.array(xi) for xi in centers_wheel_bboxes]) #np.array(centers_wheel_bboxes)
+            x = rim_ellipse_points[:, 0]
+            y = rim_ellipse_points[:, 1]
+            ell = EllipseModel()
+            done = ell.estimate(rim_ellipse_points)
+            if done:
+                xc, yc, a, b, theta = ell.params
+                center_coordinates = (int(xc), int(yc))
+                axesLength = (int(a), int(b))
+                bolts_axes = (a,b)
+                angle = int(theta*180/np.pi)
+                startAngle = 0
+                endAngle = 360
+                color = (0, 255, 0)
+                thickness = 2
+                working_image = cv2.ellipse(working_image, center_coordinates, axesLength, angle,
+                                        startAngle, endAngle, color, thickness)
+
+        # crop image to the rim
+        working_image_rim_crop = working_image.copy()
+        if rim_bbox:
+            rim_bbox = rim_bbox[0]
+            padding = 5
+            xmin = max(rim_bbox.xmin - padding, 0)
+            xmax = min(rim_bbox.xmax + padding, 770)
+            ymin = max(rim_bbox.ymin - padding, 0)
+            ymax = min(rim_bbox.ymax + padding, 770)
+            
+            xsize = xmax - xmin
+            ysize = ymax - ymin
+
+            working_image_rim_crop = working_image[ymin:ymin+ysize, xmin:xmin+xsize]
+
+        # otsu thresholding
+        gray_frame = cv2.cvtColor(working_image_rim_crop, cv2.COLOR_BGR2GRAY)
         blur_frame = cv2.GaussianBlur(gray_frame, (self.blur_value, self.blur_value), cv2.BORDER_DEFAULT)
-        if(self.image_mode == "blur"):
-            return blur_frame
+        ret3,otsu = cv2.threshold(blur_frame,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        self.image_mode = "canny"
 
-        # canny edge filter
-        canny_frame = blur_frame
-        # canny_frame = cv2.Canny(blur_frame, self.canny_1_value, self.canny_2_value)
-        # if(self.image_mode == "canny"):
-        #     return canny_frame
+        # raycasting
+        otsu_height, otsu_width = otsu.shape
+        otsu_height_half = otsu_height/2
+        otsu_height_tenth = otsu_height/10
+
+        x_rays = [otsu_height_half, otsu_height_half + otsu_height_tenth, otsu_height_half + otsu_height_tenth + otsu_height_tenth, otsu_height_half - otsu_height_tenth, otsu_height_half - otsu_height_tenth - otsu_height_tenth] 
+        x_rays = list(map(lambda x: int(x), x_rays))
         
-        # hough transform
-        circles = cv2.HoughCircles(canny_frame,
-                    cv2.HOUGH_GRADIENT,
-                    self.hough_dp_value, # 1, # dp (size of accumulator)
-                    self.hough_mindist_value, # 75, # minDist
-                    param1 = self.hough_param1_value, # param1=50, # gradient for edge detection
-                    param2 = self.hough_param2_value, # param2=35, # accumulator threshold
-                    minRadius = self.hough_minradius_value, # minRadius=70, # minRadius, originally int(180 * downscale_to_percent_of_original/100)
-                    maxRadius = self.hough_maxradius_value # maxRadius=130 # maxRadius, originally int(330 * downscale_to_percent_of_original/100)
-                    )
+        otsu_width_half = otsu_width/2
+        otsu_width_tenth = otsu_width/10
 
-        # draw detected circles
-        hough_frame = resized_frame
-        if circles is not None:
-            circles = np.uint16(np.around(circles))
-            for i in circles[0, :]:
-                # Draw outer circle
-                cv2.circle(hough_frame, (i[0], i[1]), i[2], (0, 255, 0), 2) # center coor, radius, color, thickness
-                # Draw inner circle
-                cv2.circle(hough_frame, (i[0], i[1]), 2, (0, 0, 255), 3)
+        y_rays = [otsu_width_half, otsu_width_half + otsu_width_tenth, otsu_width_half + otsu_width_tenth + otsu_width_tenth, otsu_width_half - otsu_width_tenth, otsu_width_half - otsu_width_tenth - otsu_width_tenth] 
+        y_rays = list(map(lambda x: int(x), y_rays))
 
-        if(self.image_mode == "hough"):
-            return hough_frame
+        rim_ellipse_points = []
+        # from left
+        for ray in x_rays:
+            found = False
+            for i in range(len(otsu[ray])):
+                if otsu[ray][i] == 255:
+                    found = True 
+                    rim_ellipse_points.append([float(ray), float(i)])
+                    break
+            if found:
+                continue
+        
+        # from right
+        for ray in x_rays:
+            found = False
+            for i in range(len(otsu[ray])):
+                if otsu[ray][len(otsu[ray]) - 1 - i] == 255:
+                    found = True 
+                    rim_ellipse_points.append([float(ray), float(len(otsu[ray]) - 1 - i)])
+                    break
+            if found:
+                continue
+
+        # from top
+        for ray in y_rays:
+            found = False
+            for i in range(len(otsu)):
+                if otsu[i][ray] == 255:
+                    found = True 
+                    rim_ellipse_points.append([float(i), float(ray)])
+                    break
+            if found:
+                continue
+
+        # from bottom
+        for ray in y_rays:
+            found = False
+            for i in range(len(otsu)):
+                if otsu[len(otsu) - 1 - i][ray] == 255:
+                    found = True 
+                    rim_ellipse_points.append([float(len(otsu) - 1 - i), float(ray)])
+                    break
+            if found:
+                continue
+
+        # convert otsu image to rgb
+        otsu_in_rgb = working_image_rim_crop
+        self.image_mode = "not-important"
+        
+        # convert points
+        rim_ellipse_points_in_drawing_format = rim_ellipse_points 
+        rim_ellipse_points = list(map(lambda x: (x[1],x[0]), rim_ellipse_points))
+        rim_ellipse_points = np.array(rim_ellipse_points)
+
+        ell = EllipseModel()
+        done = ell.estimate(rim_ellipse_points)
+
+        rim_axes = (None, None)
+
+        if done:
+            xc, yc, a, b, theta = ell.params
+
+            center_coordinates = (int(xc), int(yc))
+            axesLength = (int(a), int(b))
+            rim_axes = (a,b)
+            angle = int(theta*180/np.pi)
+            startAngle = 0
+            endAngle = 360
+            color = (0, 255, 0)
+            thickness = 2
+            otsu_in_rgb = cv2.ellipse(otsu_in_rgb, center_coordinates, axesLength, angle,
+                                    startAngle, endAngle, color, thickness)
+
+        for point in rim_ellipse_points_in_drawing_format:
+            otsu_in_rgb = cv2.circle(otsu_in_rgb, (int(point[1]), int(point[0])), radius=0, color=(0, 0, 255), thickness=3)
+
+        # update UI with axes of ellipses and estimation of rim size in inches
+        self.ids.textx.text = f"{bolts_axes}"
+        self.ids.textxx.text = f"{rim_axes}"
+
+        pcd_size = 112.0 #mm
+        inch_to_mm = 25.4 # multiply
+
+        if rim_axes[0] is not None and bolts_axes[0] is not None:
+            ratio = max(rim_axes) / max(bolts_axes)
+            self.ids.textxxx.text = f"{(pcd_size * ratio) / inch_to_mm}"
+
+        return otsu_in_rgb
+
     
     def img_to_texture(self, img):
         buffer1 = cv2.flip(img, 0)

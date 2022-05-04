@@ -20,6 +20,9 @@ class YoloModel():
         elif model == 'wheel_bolts_detection':
             path = Config.DataPaths.WheelBoltsDetectionYoloModel
             self.inference_size = 768
+        elif model == 'size_estimation_256':
+            path = Config.DataPaths.SizeEstimation256Model
+            self.inference_size = 256 
 
         self.model = torch.hub.load('ultralytics/yolov5', 'custom', path=path)
 

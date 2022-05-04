@@ -15,6 +15,7 @@ class Config:
 
         TrackingYoloModel = "./model/tracking_yolo.pt"
         WheelBoltsDetectionYoloModel = "./model/whee_bolts_detection_yolo.pt"
+        SizeEstimation256Model = "./model/size_estimation_256.pt"
 
         CropsFolder = "./data/crops/"
         ScaledDownCropsFolder = "./data/downscaled_crops/"
@@ -53,6 +54,8 @@ class Config:
         ScrewsSegmentationDatasetFolder = "./data/crops/"
 
         ImageGridsGeneratedFolder = "./data/image_grids_generated/"
+
+        
     
     class Tracking:
         HoughTuningDownscaleValue = 40

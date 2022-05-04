@@ -22,6 +22,9 @@ class CarTracking:
         self.wheel_tracking_a = None
         self.wheel_tracking_b = None
 
+        self.wheel_tracking_a_previous = None
+        self.wheel_tracking_b_previous = None
+
     def get_car_predictions(self):
         camera_a_prediction = TrackingPredictionV2("a", "Car", self.current_bbox.xmin, self.current_bbox.xmax, self.car_number)
         camera_b_prediction = TrackingPredictionV2("b", "Car", self.current_bbox.xmin, self.current_bbox.xmax, self.car_number)
@@ -41,7 +44,8 @@ class CarTracking:
         self.current_bbox = bbox_highest_overlap
         self.tracking_failed_counter = 0
 
-        if bbox_highest_overlap.xmin > (1920/3):
+        if bbox_highest_overlap.xmin > (1920/2.5):
+            self.tracking_fail()
             return self.tracking_fail()
 
         return True 
@@ -62,6 +66,7 @@ class CarTracking:
             if tracking_ok:
                 self.predictions.extend(self.wheel_tracking_a.get_wheel_predictions())
             else:
+                self.wheel_tracking_a_previous = self.wheel_tracking_a
                 self.wheel_tracking_a = None
                 self.first_wheel_a_complete = True
         else:
@@ -77,6 +82,7 @@ class CarTracking:
             if tracking_ok:
                 self.predictions.extend(self.wheel_tracking_b.get_wheel_predictions())
             else:
+                self.wheel_tracking_b_previous = self.wheel_tracking_b
                 self.wheel_tracking_b = None
                 self.first_wheel_b_complete = True
         else:
@@ -85,11 +91,20 @@ class CarTracking:
 
                 self.wheel_tracking_b = WheelTracking("b", self.car_number, 4 if self.first_wheel_a_complete else 2, leftmost_bbox)
                 self.predictions.extend(self.wheel_tracking_b.get_wheel_predictions())
-        
-
-        
 
     def get_wheel_predictions(self):
         if not self.full_tracking:
             return []
         return self.predictions
+
+    def get_class_and_sizes_predictions(self):
+        predictions = []
+        if self.wheel_tracking_a is not None:
+            predictions.append(self.wheel_tracking_a.get_class_and_size_prediction())
+        if self.wheel_tracking_b is not None:
+            predictions.append(self.wheel_tracking_b.get_class_and_size_prediction())
+        if self.wheel_tracking_a_previous is not None:
+            predictions.append(self.wheel_tracking_a_previous.get_class_and_size_prediction())
+        if self.wheel_tracking_b_previous is not None:
+            predictions.append(self.wheel_tracking_b_previous.get_class_and_size_prediction())
+        return predictions

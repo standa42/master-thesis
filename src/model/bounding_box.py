@@ -10,6 +10,8 @@ class BoundingBox:
         self.xmax = xmax
         self.ymin = ymin
         self.ymax = ymax
+        self.pneu_class = None
+        self.pneu_size = None
 
     def get_crop_from_image(self, image):
         """Returns crop from the image the is specified by bounding box"""
@@ -49,6 +51,12 @@ class BoundingBox:
 
     def get_iou(self, another_bbox):
         return self.get_intersection_area(another_bbox) / self.get_union_area(another_bbox)
+
+    def is_aspect_ratio_lower_than(self, ratio):
+        x_size = self.xmax - self.xmin
+        y_size = self.ymax - self.ymin
+        bbox_ratio = max(x_size, y_size) / float(min(x_size, y_size))
+        return bbox_ratio < ratio
 
     def make_centered_wheel_bounding_box(self):
         """Changes bounding box, so that center is in the original one and size is 770x770 fitted into original image of size 1920x1080"""

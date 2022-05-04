@@ -28,52 +28,6 @@ from skimage.measure import EllipseModel
 
 import numpy as np
 from numpy.linalg import eig, inv
-def fitEllipse(x,y):
-    x = x[:,np.newaxis]
-    y = y[:,np.newaxis]
-    D =  np.hstack((x*x, x*y, y*y, x, y, np.ones_like(x)))
-    S = np.dot(D.T,D)
-    C = np.zeros([6,6])
-    C[0,2] = C[2,0] = 2; C[1,1] = -1
-    E, V =  eig(np.dot(inv(S), C))
-    n = np.argmax(np.abs(E))
-    a = V[:,n]
-    return a
-
-def ellipse_center(a):
-    b,c,d,f,g,a = a[1]/2, a[2], a[3]/2, a[4]/2, a[5], a[0]
-    num = b*b-a*c
-    x0=(c*d-b*f)/num
-    y0=(a*f-b*d)/num
-    return np.array([x0,y0])
-
-
-def ellipse_angle_of_rotation( a ):
-    b,c,d,f,g,a = a[1]/2, a[2], a[3]/2, a[4]/2, a[5], a[0]
-    return 0.5*np.arctan(2*b/(a-c))
-
-
-def ellipse_axis_length( a ):
-    b,c,d,f,g,a = a[1]/2, a[2], a[3]/2, a[4]/2, a[5], a[0]
-    up = 2*(a*f*f+c*d*d+g*b*b-2*b*d*f-a*c*g)
-    down1=(b*b-a*c)*( (c-a)*np.sqrt(1+4*b*b/((a-c)*(a-c)))-(c+a))
-    down2=(b*b-a*c)*( (a-c)*np.sqrt(1+4*b*b/((a-c)*(a-c)))-(c+a))
-    res1=np.sqrt(up/down1)
-    res2=np.sqrt(up/down2)
-    return np.array([res1, res2])
-
-def ellipse_angle_of_rotation2( a ):
-    b,c,d,f,g,a = a[1]/2, a[2], a[3]/2, a[4]/2, a[5], a[0]
-    if b == 0:
-        if a > c:
-            return 0
-        else:
-            return np.pi/2
-    else: 
-        if a > c:
-            return np.arctan(2*b/(a-c))/2
-        else:
-            return np.pi/2 + np.arctan(2*b/(a-c))/2
 
 class DetectionVisualisationScreen(Screen):
 
@@ -90,7 +44,7 @@ class DetectionVisualisationScreen(Screen):
         self.video_index = 0
         self.frame_index = 0 #TODO: make it -1 for labelled dataset after I have completed that dataset loading
         self.frame_index_update = 0
-        self.clock_update_interval = .3
+        self.clock_update_interval = .35
 
         self.gold_enabled = True
         self.yolo_enabled = True
@@ -104,7 +58,7 @@ class DetectionVisualisationScreen(Screen):
         self.video_dataset_current_pair_frames_paths = None if self.frame_index == -1 else self.video_dataset_pairs[self.video_index].generate_paths_to_frames()
 
         self.yolo_model = YoloModel('tracking')
-        self.yolo_model_bolts = YoloModel('wheel_bolts_detection')
+        self.yolo_model_bolts = YoloModel('size_estimation_256')
 
         self.tracking_heuristic = TrackingHeuristicV2()
 
@@ -112,6 +66,9 @@ class DetectionVisualisationScreen(Screen):
 
     # Updates
     def reload_frame(self):
+        self.reset_ui_before_reload_frame()
+
+        start_time = time.time()
         frame_a, frame_b = self.get_frames()
         original_frame_a = frame_a.copy()
         original_frame_b = frame_b.copy()
@@ -138,12 +95,69 @@ class DetectionVisualisationScreen(Screen):
         # frame_a = self.inpaint_tracking(self.frame_index, frame_a, "a")
         # frame_b = self.inpaint_tracking(self.frame_index, frame_b, "b")
         frame_a, frame_b = self.tracking_heuristic.impaint_predictions(self.frame_index, frame_a, frame_b)
+        self.update_wheel_hystersis()
+
+        end_time = time.time()
+        self.ids.pipeline_time_label.text = f'Pipeline time[s]: {"{:.2f}".format(end_time-start_time)}'
 
         # update frames in scene
         self.ids.upper_frame_image.texture = self.img_to_texture(frame_a)
         self.ids.lower_frame_image.texture = self.img_to_texture(frame_b)
         # udpate labels
         self.update_labels_values()
+
+    def update_wheel_hystersis(self):
+        if self.tracking_heuristic.tracked_car is None:
+            self.ids.upper_box_data_pneu_class_one.text = ""
+            self.ids.upper_box_data_pneu_size_one.text = ""
+            self.ids.upper_box_data_pneu_class_two.text = ""
+            self.ids.upper_box_data_pneu_size_two.text = ""
+            self.ids.upper_box_data_pneu_class_three.text = ""
+            self.ids.upper_box_data_pneu_size_three.text = ""
+            self.ids.upper_box_data_pneu_class_four.text = ""
+            self.ids.upper_box_data_pneu_size_four.text = ""
+
+        class_and_sizes_predictions = self.tracking_heuristic.class_and_sizes_predictions[self.frame_index]
+        if class_and_sizes_predictions is not None:
+            pneu_1 = list(filter(lambda x: x.pneu_id == '1', class_and_sizes_predictions))
+            if pneu_1:
+                pneu_1 = pneu_1[0]
+                self.ids.upper_box_data_pneu_class_one.text = pneu_1.pneu_class
+                self.ids.upper_box_data_pneu_size_one.text = pneu_1.pneu_avg_size
+            pneu_2 = list(filter(lambda x: x.pneu_id == '2', class_and_sizes_predictions))
+            if pneu_2:
+                pneu_2 = pneu_2[0]
+                self.ids.upper_box_data_pneu_class_two.text = pneu_2.pneu_class
+                self.ids.upper_box_data_pneu_size_two.text = pneu_2.pneu_avg_size
+            pneu_3 = list(filter(lambda x: x.pneu_id == '3', class_and_sizes_predictions))
+            if pneu_3:
+                pneu_3 = pneu_3[0]
+                self.ids.upper_box_data_pneu_class_three.text = pneu_3.pneu_class
+                self.ids.upper_box_data_pneu_size_three.text = pneu_3.pneu_avg_size
+            pneu_4 = list(filter(lambda x: x.pneu_id == '4', class_and_sizes_predictions))
+            if pneu_4:
+                pneu_4 = pneu_4[0]
+                self.ids.upper_box_data_pneu_class_four.text = pneu_4.pneu_class
+                self.ids.upper_box_data_pneu_size_four.text = pneu_4.pneu_avg_size
+
+    def reset_ui_before_reload_frame(self):
+        blank_image = np.zeros((256,256,3), np.uint8)
+        blank_image = self.img_to_texture(blank_image)
+        self.ids.upper_box_images_top.texture = blank_image
+        self.ids.upper_box_images_bottom.texture = blank_image
+        self.ids.lower_box_images_top.texture = blank_image
+        self.ids.lower_box_images_bottom.texture = blank_image
+        self.ids.upper_box_images_middle.text = f""
+        self.ids.lower_box_images_middle.text = f""
+
+        self.ids.upper_box_data_pcd_ellipse_axes.text = ""
+        self.ids.upper_box_data_rim_ellipse_axes.text = ""
+        self.ids.upper_box_data_ratio_of_main_axes.text = ""
+        self.ids.upper_box_data_rim_estimation_inch.text = ""
+        self.ids.lower_box_data_pcd_ellipse_axes.text = ""
+        self.ids.lower_box_data_rim_ellipse_axes.text = ""
+        self.ids.lower_box_data_ratio_of_main_axes.text = ""
+        self.ids.lower_box_data_rim_estimation_inch.text = ""
     
     def update_labels_values(self):
         # video description
@@ -210,135 +224,160 @@ class DetectionVisualisationScreen(Screen):
         return frame
 
     def yolo(self, frame, camera, original_frame):
-        # inpaint bounding boxes
-        color = (255,0,0)
-        thickness = 7
+        # inpaint bounding boxes to the whole frame
         bounding_boxes = self.yolo_model.get_bounding_boxes(frame)
         for bounding_box in bounding_boxes:
-            cv2.rectangle(frame, (bounding_box.xmin, bounding_box.ymin), (bounding_box.xmax, bounding_box.ymax), color, thickness)
-        # TODO: add data to tracking heuristic 
-        # self.tracking_heuristic.add_frame(self.frame_index, bounding_boxes, camera)
-        self.tracking_heuristic.add_tracking_data(self.frame_index, bounding_boxes, camera)
-        bounding_boxes = copy.deepcopy(bounding_boxes)
+            cv2.rectangle(frame, (bounding_box.xmin, bounding_box.ymin), (bounding_box.xmax, bounding_box.ymax), color=(255,0,0), thickness=7)
 
+        # delete bounding boxes of wheels with too high aspect ratio
+        bounding_boxes = list(filter(lambda bbox: bbox.classification != 'pneu' or bbox.is_aspect_ratio_lower_than(5/3.0), bounding_boxes))
 
-        # display cropped pneus
-        for bbox in [b for b in bounding_boxes if b.classification == "pneu"]:
+        # pneu_bboxes
+        pneu_bboxes = [b for b in bounding_boxes if b.classification == "pneu"]
+        pneu_bboxes_for_heuristic = copy.deepcopy(bounding_boxes)
+
+        # work with crops of the wheels
+        for bbox_index in range(len(pneu_bboxes)):
+            bbox = pneu_bboxes[bbox_index]
+
+            # crop
             bbox.make_centered_wheel_bounding_box()
-            cropped_image = bbox.get_crop_from_image(original_frame)
+            cropped_image_to_modify = bbox.get_crop_from_image(original_frame)
+            cropped_image_to_modify = np.uint8(cropped_image_to_modify)
+            crop_original = np.copy(cropped_image_to_modify)
+            crop_original = cv2.cvtColor(crop_original, cv2.COLOR_RGB2BGR)
 
-            cropped_image = np.uint8(cropped_image)
-            origo = np.copy(cropped_image)
-            origo = cv2.cvtColor(origo, cv2.COLOR_RGB2BGR)
-            # cropped_image = self.hough_on_screws(cropped_image)
+            # classify cropped image
+            label, classification_image_texture = self.class_inference_on_server(crop_original)
 
-            wheel_bolts_bounding_boxes = self.yolo_model_bolts.get_bounding_boxes(cropped_image)
-            for bounding_box2 in wheel_bolts_bounding_boxes:
-                cv2.rectangle(cropped_image, (bounding_box2.xmin, bounding_box2.ymin), (bounding_box2.xmax, bounding_box2.ymax), color, thickness)
+            # object detection on crop -> rim and bolts bboxes
+            crop_detail_bounding_boxes = self.yolo_model_bolts.get_bounding_boxes(cropped_image_to_modify)
+            # impaint bolts bboxes
+            bolts_bboxes = list(filter(lambda x: x.classification == "Bolt", crop_detail_bounding_boxes))
+            for bounding_box2 in bolts_bboxes:
+                cv2.rectangle(cropped_image_to_modify, (bounding_box2.xmin, bounding_box2.ymin), (bounding_box2.xmax, bounding_box2.ymax), color=(255,0,0), thickness=7)
+            # compute pcd ellipse if 5 bolts are present, impaint it and get ellipse axes
+            if len(bolts_bboxes) == 5:
+                centers_of_bolts_bboxes = []
+                for bounding_box in bolts_bboxes:
+                    bbox_center = bounding_box.get_center()
+                    centers_of_bolts_bboxes.append( (float(bbox_center[0]), float(bbox_center[1])))
+                points =np.array([np.array(xi) for xi in centers_of_bolts_bboxes]) 
+                cropped_image_to_modify, pcd_axes = self.ellipse_fit(cropped_image_to_modify, points)
+            else:
+                pcd_axes = (None, None)
 
-            # elipse inprint
-            centers_wheel_bboxes = []
-            for bounding_box2 in wheel_bolts_bounding_boxes:
-                bbox_center = bounding_box2.get_center()
-                centers_wheel_bboxes.append( (float(bbox_center[0]), float(bbox_center[1]))      )
-            
-            if len(centers_wheel_bboxes) == 5:
+            # compute rim ellipse and impaint it into image
+            # but first check, whether rim bbox exists and whether it has some distance from the edges
+            rim_bboxes = list(filter(lambda x: x.classification == "Rim", crop_detail_bounding_boxes))
+            rim_axes = (None, None)
+            rim_diameter_inches = None
+            if rim_bboxes:
+                rim_bbox = rim_bboxes[0]
+                if rim_bbox.xmin > 10 and rim_bbox.xmax < 760:
+                    cropped_image_to_modify, rim_axes = self.rim_ellipse_estimation(cropped_image_to_modify, rim_bbox)
+                    rim_diameter_inches = self.compute_rim_diameter(pcd_axes, rim_axes)
 
-                a_points =np.array([np.array(xi) for xi in centers_wheel_bboxes]) #np.array(centers_wheel_bboxes)
-                x = a_points[:, 0]
-                y = a_points[:, 1]
+                    # prepare image with impainted ellipses for UI
+                    cropped_image_to_modify = cv2.cvtColor(cropped_image_to_modify, cv2.COLOR_RGB2BGR)
+                    image1_texture = self.img_to_texture(cropped_image_to_modify)
 
-                ell = EllipseModel()
-                done = ell.estimate(a_points)
-
-                if done:
-                    xc, yc, a, b, theta = ell.params
-
-                    center_coordinates = (int(xc), int(yc))
-                    axesLength = (int(a), int(b))
-                    angle = int(theta*180/np.pi)
-                    startAngle = 0
-                    endAngle = 360
-                    color = (0, 255, 0)
-                    thickness = 2
-                    cropped_image = cv2.ellipse(cropped_image, center_coordinates, axesLength, angle,
-                                            startAngle, endAngle, color, thickness)
-
-
-                # a = fitEllipse(x,y)
-                # center = ellipse_center(a)
-                # #phi = ellipse_angle_of_rotation(a)
-                # phi = ellipse_angle_of_rotation2(a)
-                # axes = ellipse_axis_length(a)
-
-                # center_coordinates = (int(center[0]),int(center[1]))
-                # axesLength = (int(axes[0]), int(axes[1]))
-                # angle = 30
-                # startAngle = 0
-                # endAngle = 360
-                # color = (0, 255, 0)
-                # thickness = 2
-                # cropped_image = cv2.ellipse(cropped_image, center_coordinates, axesLength, angle,
-                #                         startAngle, endAngle, color, thickness)
-
-                
-
-            # elipse inprint end Ellipse((xc, yc), 2*a, 2*b, theta*180/np.pi, edgecolor='red', facecolor='none')
-
-            cropped_image = cv2.cvtColor(cropped_image, cv2.COLOR_RGB2BGR)
-
-            texture = self.img_to_texture(cropped_image)
-
-            box = BoxLayout()
-            box.orientation = "horizontal"
-
-            image1 = Image()
-            image1.size_hint = (0.5, 1)
-            image1.allow_stretch = True
-            image1.texture = texture
-
-            image2 = Image()
-            image2.size_hint = (0.5, 1)
-            image2.allow_stretch = True
-
-            ################################################
-            downscaled_cropped_image = cv2.resize(origo, (256, 256), interpolation=cv2.INTER_CUBIC)
-            try:
-                addr = 'http://127.0.0.1:5000'
-                test_url = addr + '/api/test'
-
-                # prepare headers for http request
-                content_type = 'image/jpeg'
-                headers = {'content-type': content_type}
-
-                # encode image as jpeg
-                _, img_encoded = cv2.imencode('.jpg', downscaled_cropped_image)
-                # send http request with image and receive response
-                response = requests.post(test_url, data=img_encoded.tostring(), headers=headers)
-                # decode response
-                # print(json.loads(response.text))
-                message_content = json.loads(response.text)["message"]
-                loaded_image = cv2.imread(Config.DataPaths.UniqueRimsCollage + str(message_content) + ".png")
-                image2.texture = self.img_to_texture(loaded_image)
-            except:
-                pass
-            ################################################
-
-
+            # update UI
             if camera == "a":
-                self.upper_detection_boxes.append(box)
-                self.ids.upper_box.add_widget(box)
+                self.ids.upper_box_images_bottom.texture = classification_image_texture
+                self.ids.upper_box_images_middle.text = f"Predicted class: {label}"
+                if pcd_axes[0] is not None and rim_axes[0] is not None:
+                    self.ids.upper_box_images_top.texture = image1_texture
+                    self.ids.upper_box_data_pcd_ellipse_axes.text = f'PCD ellipse axes are: ({"{:.2f}".format(pcd_axes[0])}, {"{:.2f}".format(pcd_axes[1])})'
+                    self.ids.upper_box_data_rim_ellipse_axes.text = f'Rim ellipse axes are: ({"{:.2f}".format(rim_axes[0])}, {"{:.2f}".format(rim_axes[1])})'
+                    self.ids.upper_box_data_ratio_of_main_axes.text = f'Ratio of main axes is: {"{:.2f}".format(max(rim_axes) / float(max(pcd_axes)))}'
+                    self.ids.upper_box_data_rim_estimation_inch.text = f'Rim diameter is: {"{:.2f}".format(rim_diameter_inches)} inches'
             elif camera == "b":
-                self.lower_detection_boxes.append(box)
-                self.ids.lower_box.add_widget(box)
+                self.ids.lower_box_images_bottom.texture = classification_image_texture
+                self.ids.lower_box_images_middle.text = f"Predicted class: {label}"
+                if pcd_axes[0] is not None and rim_axes[0] is not None:
+                    self.ids.lower_box_images_top.texture = image1_texture
+                    self.ids.lower_box_data_pcd_ellipse_axes.text = f'PCD ellipse axes are: ({"{:.2f}".format(pcd_axes[0])}, {"{:.2f}".format(pcd_axes[1])})'
+                    self.ids.lower_box_data_rim_ellipse_axes.text = f'Rim ellipse axes are: ({"{:.2f}".format(rim_axes[0])}, {"{:.2f}".format(rim_axes[1])})'
+                    self.ids.lower_box_data_ratio_of_main_axes.text = f'Ratio of main axes is: {"{:.2f}".format(max(rim_axes) / float(max(pcd_axes)))}'
+                    self.ids.lower_box_data_rim_estimation_inch.text = f'Rim diameter is: {"{:.2f}".format(rim_diameter_inches)} inches'
+                    
+            pneu_bboxes_for_heuristic[bbox_index].pneu_class = label
+            pneu_bboxes_for_heuristic[bbox_index].pneu_size = rim_diameter_inches
 
-            box.add_widget(image1)
-            box.add_widget(image2)
+        # add data to tracking heurustic
+        self.tracking_heuristic.add_tracking_data(self.frame_index, pneu_bboxes_for_heuristic, camera)
 
-            
-
-        # end
+        # yolo end
         return frame
+
+    def compute_rim_diameter(self, pcd_axes, rim_axes):
+        pcd_size = 112.0 #mm
+        inch_to_mm = 25.4 
+
+        if rim_axes[0] is not None and pcd_axes[0] is not None:
+            ratio = max(rim_axes) / max(pcd_axes)
+            rim_size_in_inches = (pcd_size * ratio) / inch_to_mm
+            return rim_size_in_inches
+        else:
+            return None
+
+    def class_inference_on_server(self, image):
+        """Sends image to classification server and return predicted label together with representative image for that label"""
+        downscaled_cropped_image = cv2.resize(image, (256, 256), interpolation=cv2.INTER_CUBIC)
+        downscaled_cropped_image = cv2.flip(downscaled_cropped_image, 1) # the whole frame is mirrored, so we need to correct that for classification 
+        image_texture = None
+        label = None
+        try:
+            addr = 'http://127.0.0.1:5000'
+            test_url = addr + '/api/test'
+
+            # prepare headers for http request
+            content_type = 'image/jpeg'
+            headers = {'content-type': content_type}
+
+            # encode image as jpeg
+            _, img_encoded = cv2.imencode('.jpg', downscaled_cropped_image)
+            # send http request with image and receive response
+            response = requests.post(test_url, data=img_encoded.tostring(), headers=headers)
+            # decode response
+            # print(json.loads(response.text))
+            message_content = json.loads(response.text)["message"]
+            loaded_image = cv2.imread(Config.DataPaths.UniqueRimsCollage + str(message_content) + ".png")
+            label = str(message_content)
+            if str(message_content) == "unrecognized":
+                loaded_image = np.zeros((256,256,3), np.uint8)
+                loaded_image = self.img_to_texture(loaded_image)
+                image_texture = loaded_image
+                label = "other"
+            else:
+                image_texture = self.img_to_texture(loaded_image)
+        except:
+            pass
+        return label, image_texture
+
+    def ellipse_fit(self, image, points):
+        """Accepts image and sampled points, performs ellipse fitting and returns image with impatinted ellipse and ellipse axes"""
+        ell = EllipseModel()
+        done = ell.estimate(points)
+
+        axes = None
+
+        if done:
+            xc, yc, a, b, theta = ell.params
+
+            center_coordinates = (int(xc), int(yc))
+            axesLength = (int(a), int(b))
+            axes = (a,b)
+            angle = int(theta*180/np.pi)
+            startAngle = 0
+            endAngle = 360
+            color = (0, 255, 0)
+            thickness = 3
+            image = cv2.ellipse(image, center_coordinates, axesLength, angle,
+                                    startAngle, endAngle, color, thickness)
+        
+        return image, axes
 
     def hough_on_screws(self, cropped_pneu):
         cropped_pneu_copy = cropped_pneu.copy()
@@ -483,3 +522,103 @@ class DetectionVisualisationScreen(Screen):
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
         self._keyboard = None
+
+    def rim_ellipse_estimation(self, image, rim_bbox):
+        # get working copy of image
+        working_image_rim_crop = image.copy()
+
+        # crop image to the rim
+        padding = 5
+        xmin = max(rim_bbox.xmin - padding, 0)
+        xmax = min(rim_bbox.xmax + padding, 770)
+        ymin = max(rim_bbox.ymin - padding, 0)
+        ymax = min(rim_bbox.ymax + padding, 770)
+        
+        xsize = xmax - xmin
+        ysize = ymax - ymin
+
+        working_image_rim_crop = working_image_rim_crop[ymin:ymin+ysize, xmin:xmin+xsize]
+
+        # otsu thresholding
+        gray_frame = cv2.cvtColor(working_image_rim_crop, cv2.COLOR_BGR2GRAY)
+        blur_frame = cv2.GaussianBlur(gray_frame, (3, 3), cv2.BORDER_DEFAULT)
+        ret3,otsu = cv2.threshold(blur_frame,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+
+        # raycasting
+        otsu_height, otsu_width = otsu.shape
+        otsu_height_half = otsu_height/2
+        otsu_height_tenth = otsu_height/10
+
+        x_rays = [otsu_height_half, otsu_height_half + otsu_height_tenth, otsu_height_half + otsu_height_tenth + otsu_height_tenth, otsu_height_half - otsu_height_tenth, otsu_height_half - otsu_height_tenth - otsu_height_tenth] 
+        x_rays = list(map(lambda x: int(x), x_rays))
+        
+        otsu_width_half = otsu_width/2
+        otsu_width_tenth = otsu_width/10
+
+        y_rays = [otsu_width_half, otsu_width_half + otsu_width_tenth, otsu_width_half + otsu_width_tenth + otsu_width_tenth, otsu_width_half - otsu_width_tenth, otsu_width_half - otsu_width_tenth - otsu_width_tenth] 
+        y_rays = list(map(lambda x: int(x), y_rays))
+
+        rim_ellipse_points = []
+        # from left
+        for ray in x_rays:
+            found = False
+            for i in range(len(otsu[ray])):
+                if otsu[ray][i] == 255:
+                    found = True 
+                    rim_ellipse_points.append([float(ray), float(i)])
+                    break
+            if found:
+                continue
+        
+        # from right
+        for ray in x_rays:
+            found = False
+            for i in range(len(otsu[ray])):
+                if otsu[ray][len(otsu[ray]) - 1 - i] == 255:
+                    found = True 
+                    rim_ellipse_points.append([float(ray), float(len(otsu[ray]) - 1 - i)])
+                    break
+            if found:
+                continue
+
+        # from top
+        for ray in y_rays:
+            found = False
+            for i in range(len(otsu)):
+                if otsu[i][ray] == 255:
+                    found = True 
+                    rim_ellipse_points.append([float(i), float(ray)])
+                    break
+            if found:
+                continue
+
+        # from bottom
+        for ray in y_rays:
+            found = False
+            for i in range(len(otsu)):
+                if otsu[len(otsu) - 1 - i][ray] == 255:
+                    found = True 
+                    rim_ellipse_points.append([float(len(otsu) - 1 - i), float(ray)])
+                    break
+            if found:
+                continue
+
+        # convert otsu image to rgb
+        otsu_in_rgb = working_image_rim_crop
+        self.image_mode = "not-important"
+        
+        # convert points
+        rim_ellipse_points_in_drawing_format = rim_ellipse_points 
+        rim_ellipse_points = list(map(lambda x: (x[1],x[0]), rim_ellipse_points))
+        rim_ellipse_points = np.array(rim_ellipse_points)
+
+        # ellipse fit and draw
+        otsu_in_rgb, rim_axes = self.ellipse_fit(otsu_in_rgb, rim_ellipse_points)
+
+        # impaint individual points of raycast hit
+        for point in rim_ellipse_points_in_drawing_format:
+            otsu_in_rgb = cv2.circle(otsu_in_rgb, (int(point[1]), int(point[0])), radius=0, color=(0, 0, 255), thickness=3)
+
+        return otsu_in_rgb, rim_axes
+
+        

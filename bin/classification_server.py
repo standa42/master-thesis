@@ -86,9 +86,9 @@ def test():
     # decode image
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-    saving_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    saving_image = Image.fromarray(saving_image)
-    saving_image.save("C:/Users/rnsk/Desktop/abc.png")
+    # saving_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # saving_image = Image.fromarray(saving_image)
+    # saving_image.save("C:/Users/rnsk/Desktop/abc.png")
 
     label = classification_model.inference(img)
 
@@ -101,6 +101,6 @@ def test():
 
     return Response(response=response_pickled, status=200, mimetype="application/json")
 
-print("first inference: " + str(classification_model.inference( cv2.imread("C:/Users/rnsk/Desktop/abc.png")) ))
+# print("first inference: " + str(classification_model.inference( cv2.imread("C:/Users/rnsk/Desktop/abc.png")) ))
 # start flask app
 app.run(host="0.0.0.0", port=5000, threaded=True)

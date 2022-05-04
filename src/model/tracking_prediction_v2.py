@@ -26,14 +26,14 @@ class TrackingPredictionV2:
         translate_back = 60
         if self.pneu_number is not None:
             text = text + f", pneu {self.pneu_number}"
-            translate_back = 160
+            translate_back = 180
 
 
         font                   = cv2.FONT_HERSHEY_SIMPLEX
-        bottomLeftCornerOfText = (self.xcenter - translate_back, y - 20)
-        fontScale              = 1.4
+        bottomLeftCornerOfText = (self.xcenter - translate_back, y - 10)
+        fontScale              = 1.6
         fontColor              = (0,0,255)
-        thickness              = 2
+        thickness              = 4
         lineType               = 2
 
         cv2.putText(frame,

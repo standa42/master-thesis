@@ -18,6 +18,7 @@ class TrackingHeuristicV2:
         
         self.train_data = [None] * 600
         self.predictions = [None] * 600
+        self.class_and_sizes_predictions = [None] * 600
         pass
 
     def add_tracking_data(self, frame_index, bounding_boxes, camera):
@@ -60,7 +61,7 @@ class TrackingHeuristicV2:
             full_tracking = True 
             leftmost_bbox = car_bboxes[0]
 
-            if leftmost_bbox.xmax > (1920/2):
+            if leftmost_bbox.xmax > (1920/3): # NOTE: here was /2
                 full_tracking = False
 
             self.create_car(leftmost_bbox, full_tracking)
@@ -79,6 +80,7 @@ class TrackingHeuristicV2:
                 self.predictions[frame_index] = self.tracked_car.get_car_predictions()
                 self.tracked_car.update_wheel_predictions(wheel_bboxes_a, wheel_bboxes_b)
                 self.predictions[frame_index].extend(self.tracked_car.get_wheel_predictions())
+                self.class_and_sizes_predictions[frame_index] = self.tracked_car.get_class_and_sizes_predictions()
             else:
                 self.tracked_car = None
         else: 
@@ -106,7 +108,7 @@ class TrackingHeuristicV2:
                     prediction.inpaint_prediction(frame_b)
         return (frame_a, frame_b)
 
-    def remove_bboxes_near_sides(self, bounding_boxes, percent_of_image_to_cut_left = 0.15, percent_of_image_to_cut_right = 0.20):
+    def remove_bboxes_near_sides(self, bounding_boxes, percent_of_image_to_cut_left = 0.2, percent_of_image_to_cut_right = 0.3):
         # remove bboxes near sides and return modified collection
         pixels_of_image_to_cut_left = 1920 * percent_of_image_to_cut_left
         pixels_of_image_to_cut_right = 1920 * percent_of_image_to_cut_right

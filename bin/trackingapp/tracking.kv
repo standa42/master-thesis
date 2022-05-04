@@ -19,15 +19,15 @@ ScreenManager:
         name: 'DetectionVisualisationScreen'
         manager: 'screen_manager'
 
-    HoughParametersSegmentationScreen:
-        id: hough_parameters_segmentation_screen
-        name: 'HoughParametersSegmentationScreen'
+    SizeEstimationTestingScreen:
+        id: size_estimation_testing_screen
+        name: 'SizeEstimationTestingScreen'
         manager: 'screen_manager'
 
 <MenuScreen>:
     FloatLayout:
         Label:
-            text: 'Tracking app'
+            text: 'Prototype app'
             font_size: 50
             size_hint: 0.3,0.15
             pos_hint: {"center_x":0.5, "center_y":0.7}
@@ -48,18 +48,21 @@ ScreenManager:
                 on_release: app.root.current = 'HoughParametersScreen'
 
             Button:
-                text: 'Hough parameters tuning on screws'
+                text: 'Size estimation testing'
                 font_size: 25
-                on_release: app.root.current = 'HoughParametersSegmentationScreen'
+                on_release: app.root.current = 'SizeEstimationTestingScreen'
 
 <DetectionVisualisationScreen>
+    # overall distinction between menu and left side
     BoxLayout:
         orientation: 'horizontal'
 
+        # separating upper and lower part of the data
         BoxLayout:
             size_hint: (1, 1)
             orientation: 'vertical'
 
+            # separating tracking image from the info in the right
             BoxLayout:
                 size_hint: (1, 1)
                 orientation: 'horizontal'
@@ -67,11 +70,112 @@ ScreenManager:
                     id: upper_frame_image
                     size_hint: (0.5, 1)
                     allow_stretch: True
+                # data info box
                 BoxLayout:
+                    canvas.before:
+                        Color:
+                            rgba: 0, 0, 0, 1
+                        Rectangle:
+                            size: self.size
+                            pos: self.pos
                     id: upper_box
                     size_hint: (0.5, 1)
-                    orientation: 'vertical'
+                    orientation: 'horizontal'
+                    BoxLayout:
+                        id: upper_box_images
+                        size_hint: (0.4, 1)
+                        orientation: 'vertical'
+                        Image:
+                            id: upper_box_images_top
+                            size_hint: (1, 0.7)
+                            allow_stretch: True
+                        Label:
+                            id: upper_box_images_middle
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Image:
+                            id: upper_box_images_bottom
+                            size_hint: (1, 0.3)
+                            allow_stretch: True
+                    BoxLayout:
+                        id: upper_box_data
+                        size_hint: (0.7, 1)
+                        orientation: 'vertical'
+                        Label:
+                            font_size: 18
+                            text: "------------------------ Camera A ------------------------"
+                            size_hint: (1, 0.2)
+                        Label:
+                            id: upper_box_data_pcd_ellipse_axes
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Label:
+                            id: upper_box_data_rim_ellipse_axes
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Label:
+                            id: upper_box_data_ratio_of_main_axes
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Label:
+                            id: upper_box_data_rim_estimation_inch
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Label:
+                            font_size: 18
+                            text: "------------------------ Wheel classes ------------------------"
+                            size_hint: (1, 0.2)
+                        Label:
+                            id: upper_box_data_pneu_class_one
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Label:
+                            id: upper_box_data_pneu_class_two
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Label:
+                            id: upper_box_data_pneu_class_three
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Label:
+                            id: upper_box_data_pneu_class_four
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Label:
+                            font_size: 18
+                            text: "------------------------ Wheel sizes [inch]------------------------"
+                            size_hint: (1, 0.2)
+                        Label:
+                            id: upper_box_data_pneu_size_one
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Label:
+                            id: upper_box_data_pneu_size_two
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Label:
+                            id: upper_box_data_pneu_size_three
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Label:
+                            id: upper_box_data_pneu_size_four
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
                     
+            # separating tracking image from the info in the right
             BoxLayout:
                 size_hint: (1, 1)
                 orientation: 'horizontal'
@@ -79,10 +183,64 @@ ScreenManager:
                     id: lower_frame_image
                     size_hint: (0.5, 1)
                     allow_stretch: True
+                # data info box
                 BoxLayout:
+                    canvas.before:
+                        Color:
+                            rgba: 0, 0, 0, 1
+                        Rectangle:
+                            size: self.size
+                            pos: self.pos
                     id: lower_box
                     size_hint: (0.5, 1)
-                    orientation: 'vertical'
+                    orientation: 'horizontal'
+                    BoxLayout:
+                        id: lower_box_images
+                        size_hint: (0.4, 1)
+                        orientation: 'vertical'
+                        Image:
+                            id: lower_box_images_top
+                            size_hint: (1, 0.7)
+                            allow_stretch: True
+                        Label:
+                            id: lower_box_images_middle
+                            size_hint: (1, 0.1)
+                            text: ""
+                        Image:
+                            id: lower_box_images_bottom
+                            size_hint: (1, 0.3)
+                            allow_stretch: True
+                    BoxLayout:
+                        id: lower_box_data
+                        size_hint: (0.7, 1)
+                        orientation: 'vertical'
+                        Label:
+                            font_size: 18
+                            text: "------------------------ Camera B ------------------------"
+                            size_hint: (1, 0.2)
+                        Label:
+                            id: lower_box_data_pcd_ellipse_axes
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Label:
+                            id: lower_box_data_rim_ellipse_axes
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Label:
+                            id: lower_box_data_ratio_of_main_axes
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Label:
+                            id: lower_box_data_rim_estimation_inch
+                            font_size: 16
+                            text: ""
+                            size_hint: (1, 0.1)
+                        Label:
+                            text: ""
+                            size_hint: (1, 0.8)
 
         BoxLayout:
             size_hint: (None, 1)
@@ -150,9 +308,14 @@ ScreenManager:
                 text: 'Disable Hough'
                 on_press: root.toggle_hough()
 
+            Label:
+                id: pipeline_time_label
+                text: ''
+
             Button:
                 text: 'Back to Menu'
                 on_release: app.root.current = 'MenuScreen'
+            
 
 <HoughParametersScreen>:
     BoxLayout:
@@ -347,7 +510,7 @@ ScreenManager:
                 text: 'Back to Menu'
                 on_release: app.root.current = 'MenuScreen'
 
-<HoughParametersSegmentationScreen>:
+<SizeEstimationTestingScreen>:
     BoxLayout:
         orientation: 'horizontal'
 
@@ -530,7 +693,15 @@ ScreenManager:
                 value: 130
                 step: 1
                 on_value: root.hough()
-            
+            Label:
+                id: textx
+                text: '_____'
+            Label:
+                id: textxx
+                text: '_____'
+            Label:
+                id: textxxx
+                text: '_____'
             Button:
                 text: 'Back to Menu'
                 on_release: app.root.current = 'MenuScreen'

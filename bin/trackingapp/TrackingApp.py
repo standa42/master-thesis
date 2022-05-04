@@ -14,7 +14,7 @@ import pandas as pd
 from bin.trackingapp.MenuScreen import MenuScreen
 from bin.trackingapp.HoughParametersScreen import HoughParametersScreen
 from bin.trackingapp.DetectionVisualisationScreen import DetectionVisualisationScreen
-from bin.trackingapp.HoughParametersSegmentationScreen import ScrewsSegmentationDataset
+from bin.trackingapp.SizeEstimationTestingScreen import SizeEstimationTestingScreen
 
 class TrackingApp(App):
     # workaround to window resizing bug: https://github.com/kivy/kivy/issues/5359 part 1
@@ -29,6 +29,7 @@ class TrackingApp(App):
 
         # resize window
         Window.size = (1500, 800)
+
 
 if __name__ == '__main__':
     kivy.Config.set('graphics', 'resizable', True)
