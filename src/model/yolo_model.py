@@ -17,6 +17,9 @@ class YoloModel():
         if model == 'tracking':
             path = Config.DataPaths.TrackingYoloModel
             self.inference_size = 640 
+        elif model == 'trackingv2':
+            path = Config.DataPaths.TrackingV2YoloModel
+            self.inference_size = 640 
         elif model == 'wheel_bolts_detection':
             path = Config.DataPaths.WheelBoltsDetectionYoloModel
             self.inference_size = 768

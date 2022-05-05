@@ -957,33 +957,3 @@ if __name__ == "__main__":
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# HOG vizualization code 
-# img = cv2.imread("./data/crops/2019_05_13_19_24_17_B_frame557_bb0_Wheel.png")
-
-# fd, hog_image = hog(img, visualize=True, multichannel=True, orientations=8, pixels_per_cell=(16, 16),
-#                 cells_per_block=(1, 1))
-# fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 16), sharex=True, sharey=True) 
-
-# ax1.imshow(img, cmap=plt.cm.gray) 
-# ax1.set_title('Input image') 
-
-# # Rescale histogram for better display 
-# hog_image_rescaled = exposure.rescale_intensity(hog_image, in_range=(0, 10)) 
-
-# ax2.imshow(hog_image_rescaled, cmap=plt.cm.gray) 
-# ax2.set_title('Histogram of Oriented Gradients')
-
-# plt.show()

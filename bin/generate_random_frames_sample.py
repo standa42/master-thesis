@@ -14,6 +14,8 @@ from src.data.video.video import Video
 from src.data.video.video_pair import Video_pair
 from src.data.video.video_dataset import Video_dataset
 
+# TODO ensure none repetition of sampling
+
 if __name__ == "__main__":
     print("Script started")
     # get all videos

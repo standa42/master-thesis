@@ -21,7 +21,7 @@ for f in train_files:
 
 
 val_files = os.listdir(size_estimation_val_folder)
-val_files = list(filter(lambda x: x[-4] == ".png", val_files))
+val_files = list(filter(lambda x: x[-4:] == ".png", val_files))
 
 for f in val_files:
     source = crops_folder + f 
@@ -31,7 +31,7 @@ for f in val_files:
 
 
 test_files = os.listdir(size_estimation_test_folder)
-test_files = list(filter(lambda x: x[-4] == ".png", test_files))
+test_files = list(filter(lambda x: x[-4:] == ".png", test_files))
 
 for f in test_files:
     source = crops_folder + f 

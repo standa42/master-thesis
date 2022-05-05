@@ -55,19 +55,20 @@ class SizeEstimationTestingScreen(Screen):
 
     def init_sliders(self):
         # downscale
-        self.ids.downscale_slider_slider.value  = self.downscale_value
+        # self.ids.downscale_slider_slider.value  = self.downscale_value
         # blue
-        self.ids.blur_slider_slider.value = int((self.blur_value - 1) / 2)
+        # self.ids.blur_slider_slider.value = int((self.blur_value - 1) / 2)
         # canny
         # self.ids.canny_slider_1_slider.value = self.canny_1_value
         # self.ids.canny_slider_2_slider.value = self.canny_2_value
         # hough
-        self.ids.hough_dp_slider.value = self.hough_dp_value
-        self.ids.hough_mindist_slider.value = self.hough_mindist_value
-        self.ids.hough_param1_slider.value = self.hough_param1_value
-        self.ids.hough_param2_slider.value = self.hough_param2_value
-        self.ids.hough_minradius_slider.value = self.hough_minradius_value
-        self.ids.hough_maxradius_slider.value = self.hough_maxradius_value
+        # self.ids.hough_dp_slider.value = self.hough_dp_value
+        # self.ids.hough_mindist_slider.value = self.hough_mindist_value
+        # self.ids.hough_param1_slider.value = self.hough_param1_value
+        # self.ids.hough_param2_slider.value = self.hough_param2_value
+        # self.ids.hough_minradius_slider.value = self.hough_minradius_value
+        # self.ids.hough_maxradius_slider.value = self.hough_maxradius_value
+        pass
 
     # Updates
     def reload_frame(self):
@@ -82,19 +83,20 @@ class SizeEstimationTestingScreen(Screen):
         # frame description
         self.ids.frame_description_label.text = "Frame: " + str(self.frame_index)
         # downscale
-        self.ids.downscale_slider_label.text = "Downscale is: " + str(self.downscale_value)
+        # self.ids.downscale_slider_label.text = "Downscale is: " + str(self.downscale_value)
         # blur
-        self.ids.blur_slider_label.text = "Blur is: " + str(self.blur_value)
+        # self.ids.blur_slider_label.text = "Blur is: " + str(self.blur_value)
         # canny
         # self.ids.canny_slider_1_label.text = "Canny 1 param: " + str(self.canny_1_value)
         # self.ids.canny_slider_2_label.text = "Canny 2 param: " + str(self.canny_2_value)
         # hough
-        self.ids.hough_dp_label.text = "Dp: " + str(self.hough_dp_value)
-        self.ids.hough_mindist_label.text = "MinDist: " + str(self.hough_mindist_value)
-        self.ids.hough_param1_label.text = "Param1: " + str(self.hough_param1_value)
-        self.ids.hough_param2_label.text = "Param2: " + str(self.hough_param2_value)
-        self.ids.hough_minradius_label.text = "MinRadius: " + str(self.hough_minradius_value)
-        self.ids.hough_maxradius_label.text = "MaxRadius: " + str(self.hough_maxradius_value)
+        # self.ids.hough_dp_label.text = "Dp: " + str(self.hough_dp_value)
+        # self.ids.hough_mindist_label.text = "MinDist: " + str(self.hough_mindist_value)
+        # self.ids.hough_param1_label.text = "Param1: " + str(self.hough_param1_value)
+        # self.ids.hough_param2_label.text = "Param2: " + str(self.hough_param2_value)
+        # self.ids.hough_minradius_label.text = "MinRadius: " + str(self.hough_minradius_value)
+        # self.ids.hough_maxradius_label.text = "MaxRadius: " + str(self.hough_maxradius_value)
+        pass
         
     def modify_image_accoring_to_image_mode(self, original_frame):
         working_image = original_frame.copy()
@@ -103,7 +105,8 @@ class SizeEstimationTestingScreen(Screen):
         all_bounding_boxes = self.yolo_model_bolts.get_bounding_boxes(working_image)
         rim_bbox = list(filter(lambda x: x.classification == 'Rim', all_bounding_boxes))
         bolts_bboxs = list(filter(lambda x: x.classification == 'Bolt', all_bounding_boxes))
-
+        
+        ############################################################################################################################################################################################################## bolts bboxes
         # impaint bolts bboxes
         for bounding_box2 in bolts_bboxs:
             cv2.rectangle(working_image, (bounding_box2.xmin, bounding_box2.ymin), (bounding_box2.xmax, bounding_box2.ymax), (0,0,255), 2)
@@ -130,8 +133,8 @@ class SizeEstimationTestingScreen(Screen):
                 endAngle = 360
                 color = (0, 255, 0)
                 thickness = 2
-                working_image = cv2.ellipse(working_image, center_coordinates, axesLength, angle,
-                                        startAngle, endAngle, color, thickness)
+                ########################################################################################################################################################################################################### pcd ellipse
+                working_image = cv2.ellipse(working_image, center_coordinates, axesLength, angle, startAngle, endAngle, color, thickness)
 
         # crop image to the rim
         working_image_rim_crop = working_image.copy()
@@ -147,6 +150,7 @@ class SizeEstimationTestingScreen(Screen):
             ysize = ymax - ymin
 
             working_image_rim_crop = working_image[ymin:ymin+ysize, xmin:xmin+xsize]
+
 
         # otsu thresholding
         gray_frame = cv2.cvtColor(working_image_rim_crop, cv2.COLOR_BGR2GRAY)
@@ -214,6 +218,8 @@ class SizeEstimationTestingScreen(Screen):
                 continue
 
         # convert otsu image to rgb
+        ############################################################################################################################################################################################################## otsu or rgb
+        # otsu_in_rgb = cv2.cvtColor(otsu,cv2.COLOR_GRAY2RGB)
         otsu_in_rgb = working_image_rim_crop
         self.image_mode = "not-important"
         
@@ -238,22 +244,32 @@ class SizeEstimationTestingScreen(Screen):
             endAngle = 360
             color = (0, 255, 0)
             thickness = 2
-            otsu_in_rgb = cv2.ellipse(otsu_in_rgb, center_coordinates, axesLength, angle,
-                                    startAngle, endAngle, color, thickness)
+            ############################################################################################################################################################################################################## rim ellipse
+            otsu_in_rgb = cv2.ellipse(otsu_in_rgb, center_coordinates, axesLength, angle, startAngle, endAngle, color, thickness)
 
+        ############################################################################################################################################################################################################## sample points
         for point in rim_ellipse_points_in_drawing_format:
-            otsu_in_rgb = cv2.circle(otsu_in_rgb, (int(point[1]), int(point[0])), radius=0, color=(0, 0, 255), thickness=3)
+            otsu_in_rgb = cv2.circle(otsu_in_rgb, (int(point[1]), int(point[0])), radius=3, color=(0, 0, 255), thickness=4)
+        # return otsu_in_rgb
 
         # update UI with axes of ellipses and estimation of rim size in inches
-        self.ids.textx.text = f"{bolts_axes}"
-        self.ids.textxx.text = f"{rim_axes}"
 
-        pcd_size = 112.0 #mm
-        inch_to_mm = 25.4 # multiply
+        if bolts_axes[0] is None:
+            self.ids.textx.text = ""
+        else:
+            self.ids.textx.text = f'PCD axes: ({"{:.2f}".format(bolts_axes[0])}, {"{:.2f}".format(bolts_axes[1])})' #f"{bolts_axes}" 
+        if rim_axes[0] is None:
+            self.ids.textxx.text = ""
+        else:
+            self.ids.textxx.text = f'Rim axes: ({"{:.2f}".format(rim_axes[0])}, {"{:.2f}".format(rim_axes[1])})' # f"{rim_axes}"
 
-        if rim_axes[0] is not None and bolts_axes[0] is not None:
-            ratio = max(rim_axes) / max(bolts_axes)
-            self.ids.textxxx.text = f"{(pcd_size * ratio) / inch_to_mm}"
+        if bolts_axes[0] is not None and rim_axes[0] is not None:
+            pcd_size = 112.0 #mm
+            inch_to_mm = 25.4 # multiply
+
+            if rim_axes[0] is not None and bolts_axes[0] is not None:
+                ratio = max(rim_axes) / max(bolts_axes)
+                self.ids.textxxx.text = f'Rim diameter[inch]: {"{:.2f}".format((pcd_size * ratio) / inch_to_mm)}'
 
         return otsu_in_rgb
 

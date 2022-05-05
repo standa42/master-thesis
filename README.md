@@ -17,7 +17,7 @@ cd "master-thesis-implementation"
 ```
 
 # create conda environment (current name is tfg7, contains tensorflow-gpu)
-conda env create -f environment-tfg7.yml
+conda env create -f environment-tfg7.yaml
 conda activate tfg7
 
 # enable referencing in thesis package

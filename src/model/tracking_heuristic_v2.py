@@ -55,7 +55,7 @@ class TrackingHeuristicV2:
     def init_frame(self):
         # do prediction for initial frame
         # get car predictions from camera a
-        car_bboxes = list(filter(lambda x: x.classification == 'car', self.train_data[0][0])) 
+        car_bboxes = list(filter(lambda x: x.classification == 'Car', self.train_data[0][0])) 
         # setup tracking
         if car_bboxes:
             full_tracking = True 
@@ -70,9 +70,9 @@ class TrackingHeuristicV2:
     def predict(self, frame_index):
         # do prediciton for general frame
         # get car predictions from camera a
-        car_bboxes = list(filter(lambda x: x.classification == 'car', self.train_data[frame_index][0])) 
-        wheel_bboxes_a = list(filter(lambda x: x.classification == 'pneu', self.train_data[frame_index][0])) 
-        wheel_bboxes_b = list(filter(lambda x: x.classification == 'pneu', self.train_data[frame_index][1])) 
+        car_bboxes = list(filter(lambda x: x.classification == 'Car', self.train_data[frame_index][0])) 
+        wheel_bboxes_a = list(filter(lambda x: x.classification == 'Wheel', self.train_data[frame_index][0])) 
+        wheel_bboxes_b = list(filter(lambda x: x.classification == 'Wheel', self.train_data[frame_index][1])) 
         if self.tracked_car is not None:
             tracking_ok = self.tracked_car.update_car_predictions(car_bboxes)
 

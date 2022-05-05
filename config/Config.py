@@ -15,7 +15,8 @@ class Config:
 
         TrackingYoloModel = "./model/tracking_yolo.pt"
         WheelBoltsDetectionYoloModel = "./model/whee_bolts_detection_yolo.pt"
-        SizeEstimation256Model = "./model/size_estimation_256.pt"
+        SizeEstimation256Model = "./model/size_estimation_256_yolo.pt"
+        TrackingV2YoloModel = "./model/tracking_v2_yolo.pt"
 
         CropsFolder = "./data/crops/"
         ScaledDownCropsFolder = "./data/downscaled_crops/"

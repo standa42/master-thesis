@@ -48,7 +48,7 @@ class DetectionVisualisationScreen(Screen):
 
         self.gold_enabled = True
         self.yolo_enabled = True
-        self.hough_enabled = True
+        self.hough_enabled = False
 
         self.upper_detection_boxes = []
         self.lower_detection_boxes = []
@@ -57,7 +57,7 @@ class DetectionVisualisationScreen(Screen):
         self.video_dataset_pairs = self.video_dataset.get_all_video_pairs()
         self.video_dataset_current_pair_frames_paths = None if self.frame_index == -1 else self.video_dataset_pairs[self.video_index].generate_paths_to_frames()
 
-        self.yolo_model = YoloModel('tracking')
+        self.yolo_model = YoloModel('trackingv2')
         self.yolo_model_bolts = YoloModel('size_estimation_256')
 
         self.tracking_heuristic = TrackingHeuristicV2()
@@ -230,10 +230,10 @@ class DetectionVisualisationScreen(Screen):
             cv2.rectangle(frame, (bounding_box.xmin, bounding_box.ymin), (bounding_box.xmax, bounding_box.ymax), color=(255,0,0), thickness=7)
 
         # delete bounding boxes of wheels with too high aspect ratio
-        bounding_boxes = list(filter(lambda bbox: bbox.classification != 'pneu' or bbox.is_aspect_ratio_lower_than(5/3.0), bounding_boxes))
+        bounding_boxes = list(filter(lambda bbox: bbox.classification != 'Wheel' or bbox.is_aspect_ratio_lower_than(5/3.0), bounding_boxes))
 
         # pneu_bboxes
-        pneu_bboxes = [b for b in bounding_boxes if b.classification == "pneu"]
+        pneu_bboxes = [b for b in bounding_boxes if b.classification == "Wheel"]
         pneu_bboxes_for_heuristic = copy.deepcopy(bounding_boxes)
 
         # work with crops of the wheels
@@ -429,7 +429,7 @@ class DetectionVisualisationScreen(Screen):
 
     # video movement control
     def next_video(self):
-        if self.video_index < (len(self.video_dataset_pairs) - 1):
+        if self.video_index < (len(list(filter(lambda pair: pair.is_parsed(),self.video_dataset_pairs))) - 1):
             self.video_index = self.video_index + 1
             self.frame_index = 0
             self.tracking_heuristic.reset()

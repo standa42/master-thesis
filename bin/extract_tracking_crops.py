@@ -21,7 +21,7 @@ print("Script started")
 # load dataset and model
 print("Loading object detection model")
 dataset = Video_dataset()
-yolo_model = YoloModel('tracking')
+yolo_model = YoloModel('trackingv2')
 
 safe_mkdir(Config.DataPaths.CropsFolder)
 
@@ -39,7 +39,7 @@ for video_idx, video in enumerate(all_videos):
         # get detected objects from model
         for bounding_box_index, bounding_box in enumerate(yolo_model.get_bounding_boxes(frame)):
             # currently we are interested only in detection of the wheels
-            if bounding_box.classification != "pneu":
+            if bounding_box.classification != "Wheel":
                 continue
             # center, get crop of size (770,770) and save it to Crop folder
             bounding_box.make_centered_wheel_bounding_box()

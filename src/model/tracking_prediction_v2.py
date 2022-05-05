@@ -25,8 +25,8 @@ class TrackingPredictionV2:
         text = f"car {self.car_number}"
         translate_back = 60
         if self.pneu_number is not None:
-            text = text + f", pneu {self.pneu_number}"
-            translate_back = 180
+            text = text + f", wheel {self.pneu_number}"
+            translate_back = 185
 
 
         font                   = cv2.FONT_HERSHEY_SIMPLEX
