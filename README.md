@@ -1,46 +1,30 @@
-# master-thesis-implementation
-Implementation part of my master thesis.
+# System for automatic size and type control of cars rims
 
-## Requirements
+## Abstract
 
-Main project development is currently done in conda environment (under python 3.7), because it enables quick start with tensorflow-gpu. Build for other environment like pipenv will be probably added in the future.
+At the end of every automotive assembly line, there is a quality control
+process where factory workers check produced cars for potential defects. The
+computer vision field, especially neural networks for images, have great potential to complement human staff in order to produce as safe and reliable cars as
+possible. In this thesis we focus on the validation, whether all four wheels on a
+single car match in size and type. We introduce and experiment with both neural
+networks and traditional computer vision techniques. The approach we use is to
+first detect the car then classify its wheels and try to estimate their size. In the
+end we build a functional prototype of the system that is running in real-time.
+The data for this thesis were recorded in Skoda Auto factory in Mlada Boleslav
+in cooperation with the company.
 
-## How to set up project
+## Application
 
-1. Clone repository and change current directory
-```
-git clone https://github.com/standa42/master-thesis-implementation.git
-cd "master-thesis-implementation"
-```
+See prototype of application in video:
+▶️ https://youtu.be/c_y6aQq1-xo
 
-2. Install environment
-```
+<img src="docs/showcase_gif.gif" width="100%" />
 
-# create conda environment (current name is tfg7, contains tensorflow-gpu)
-conda env create -f environment-tfg7.yaml
-conda activate tfg7
+## Thesis text
 
-# enable referencing in thesis package
-pip install -e "."
-```
+Thesis text is located in ./docs/thesis.pdf
 
-3. Add environment to jupyter notebooks (optional)
-```
-python -m ipykernel install --user --name tfg7 --display-name "Python Conda (tfg7)"
-```
+## Description
 
-## Project structure
-- bin - standalone scripts mostly doing one step of the processing pipeline
-- config - configurations
-- data - folder containing all processed data
-- docs - documentation
-- notebooks - jupyter notebooks
-- src - main source folder containing important modules
-
-
-
-
-
-
-
+The documentation is stored in ./docs folder. The recommended approach is to read User documentation first and then optionally Technical od Experiments documentation.
 
